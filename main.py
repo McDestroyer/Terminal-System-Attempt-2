@@ -7,7 +7,7 @@ if __name__ == '__main__':
         try:
             terminal_system.update()
 
-            terminal_system.output()
+            terminal_system.refresh_screen()
 
         except KeyboardInterrupt as e:
             print(f'Exception in terminal_system.main_loop():\n{e}')

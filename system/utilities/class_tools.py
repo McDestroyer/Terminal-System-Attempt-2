@@ -57,14 +57,19 @@ class ArgumentativeFunction:
         Args:
             func (Callable[[...], object]):
                 The function to be called.
-            args (tuple):
+            args (Any):
                 The arguments to be passed to the function.
-            kwargs (dict):
+            kwargs (Any):
                 The keyword arguments to be passed to the function.
         """
         self.func = func
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self) -> object:
-        return self.func(*self.args, **self.kwargs)
+    def __call__(self, *args, **kwargs) -> object:
+        return self.func(*(self.args + args), **(self.kwargs | kwargs))
+
+
+if __name__ == "__main__":
+    # Test the Toggle class
+    ArgumentativeFunction(print, "Hello, world!", "Hi", end="!")()
