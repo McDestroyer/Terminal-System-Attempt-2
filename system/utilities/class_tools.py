@@ -7,7 +7,7 @@ Classes:
     ArgumentativeFunction:
         Describes a function and the arguments to be called with it. Can be called to execute the function.
 """
-from typing import Callable
+from typing import Callable, Any
 
 
 class Toggle:
@@ -18,25 +18,29 @@ class Toggle:
         state (bool):
             The current state of the Toggle.
     """
-    def __init__(self, state=False) -> None:
+    def __init__(self, state: bool = False, value_map: dict[bool, Any] | None = None) -> None:
         """Initialize the Toggle object.
 
         Args:
             state (bool, optional):
                 The initial state of the Toggle.
                 Defaults to False.
+            value_map (dict[bool, Any], optional):
+                A dictionary mapping the state of the Toggle to a value.
+                Defaults to {True: True, False: False} if not provided.
         """
         self.state = state
+        self.value_options = value_map if value_map else {True: True, False: False}
 
-    def __call__(self) -> bool:
+    def __call__(self) -> bool | Any:
         self.state = not self.state
-        return self.state
+        return self.value_options[self.state]
 
-    def __bool__(self) -> bool:
-        return self.state
+    def __bool__(self) -> bool | Any:
+        return self.value_options[self.state]
 
-    def __repr__(self) -> str:
-        return str(self.state)
+    def __repr__(self) -> bool | Any:
+        return self.value_options[self.state]
 
 
 class ArgumentativeFunction:
