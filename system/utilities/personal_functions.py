@@ -20,13 +20,8 @@ import os
 from time import sleep
 import time
 
-# Gets rid of an annoying and irrelevant error message
-
-# pylint: disable=no-member
-# pylint: disable=import-error
-
-import utilities.color as color
-import utilities.keyboard_input as keybd
+from system.utilities.color import Colors
+import system.utilities.keyboard_input as keybd
 
 
 # Input / Output
@@ -109,7 +104,7 @@ def text(*message: object, unlist_list: bool = True, letter_time: float = 0.0,
 
     # Cleans up and optionally waits at the end.
     sleep(line_delay * speed)
-    print(color.END, end="")
+    print(Colors.END, end="")
     print(end=end)
 
 
@@ -147,11 +142,11 @@ def error(*message: object, unlist_list: bool = True, letter_time: float = 0.0, 
         if isinstance(message, (tuple, list)):
             str_message = message[0]
 
-    msg = color.WARN + " " + str_message + " " + color.WARN.strip()
+    msg = Colors.WARN + " " + str_message + " " + str(Colors.WARN).strip()
 
     # Passes through the arguments to text() and adds the error modifiers.
     text(msg, unlist_list=unlist_list, letter_time=letter_time, line_delay=line_delay,
-         sep=sep, end=end, flush=flush, mods=[color.ERROR])
+         sep=sep, end=end, flush=flush, mods=[Colors.ERROR])
 
 
 def intext(*message: object, unlist_list: bool = True, letter_time: float = 0.0, line_delay: float = 0,
@@ -247,7 +242,7 @@ def intput(*message: object, unlist_list: bool = True, letter_time: int = 0.0, l
     """
 
     # Having a function have a default list is "dangerous" so this serves as an equivalent if None.
-    fail_mods = [color.ERROR] if fail_mods is None else fail_mods
+    fail_mods = [Colors.ERROR] if fail_mods is None else fail_mods
 
     # Attempts to get an input and loops until it is valid.
     # Changes the message and mods after the 1st attempt.
@@ -320,7 +315,7 @@ def floatput(*message: str, unlist_list: bool = True, sep: str = " ", letter_tim
     """
 
     # Having a function have a default list is "dangerous" so this serves as an equivalent if None.
-    fail_mods = [color.ERROR] if fail_mods is None else fail_mods
+    fail_mods = [Colors.ERROR] if fail_mods is None else fail_mods
 
     # Attempts to get an input and loops until it is valid.
     # Changes the message and mods after the 1st attempt.
@@ -701,8 +696,8 @@ def _tester():
     """Test various modifications or new functions easily.
     Used entirely for prototyping purposes."""
 
-    text(f"{color.WARN} WARNING!!! {color.WARN.strip()}",
-         mods=[color.ERROR, color.BOLD])
+    text(f"{Colors.WARN} WARNING!!! {Colors.WARN.value.strip()}",
+         mods=[Colors.ERROR, Colors.BOLD])
 
 
 if __name__ == "__main__":

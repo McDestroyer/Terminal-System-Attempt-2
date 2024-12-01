@@ -35,7 +35,7 @@ class Axis:
                 Defaults to 1.
         """
         self._unit: UnitNames = unit
-        self._screen_size: int = axis_size
+        self._axis_size: int = axis_size
 
         self._value: float = value
         self._char_value: float = self._get_char_value()
@@ -75,11 +75,11 @@ class Axis:
 
     @property
     def screen_size(self) -> int:
-        return self._screen_size
+        return self._axis_size
 
     @screen_size.setter
     def screen_size(self, new_screen_size: int) -> None:
-        self._screen_size = new_screen_size
+        self._axis_size = new_screen_size
 
         if self._unit == UnitNames.CHAR:
             self._percent_value = self._get_percent_value()
@@ -114,7 +114,7 @@ class Axis:
         if self._unit == UnitNames.CHAR:
             return self._value
         elif self._unit == UnitNames.PERCENT:
-            return self._value * self._screen_size
+            return self._value * self._axis_size
         else:
             raise ValueError(f"Invalid unit: {self._unit}")
 
@@ -127,18 +127,18 @@ class Axis:
         if self._unit == UnitNames.PERCENT:
             return self._value
         elif self._unit == UnitNames.CHAR:
-            return self._value / self._screen_size
+            return self._value / self._axis_size if self._axis_size != 0 else 0
         else:
             raise ValueError(f"Invalid unit: {self._unit}")
 
     def __str__(self) -> str:
-        return f"Axis({self._unit}, {self._screen_size})"
+        return f"Axis({self._unit}, {self._axis_size})"
 
     def __repr__(self) -> str:
         return str(self)
 
     def __eq__(self, other: 'Axis') -> bool:
-        return self._unit == other._unit and self._screen_size == other._screen_size and self._value == other._value
+        return self._unit == other._unit and self._axis_size == other._axis_size and self._value == other._value
 
     def __ne__(self, other: 'Axis') -> bool:
         return not self == other
@@ -157,80 +157,80 @@ class Axis:
 
     def __add__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value + other._value, self._unit, self._screen_size)
+            return Axis(self._value + other._value, self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value + other._char_value, self._unit, self._screen_size)
+            return Axis(self._value + other._char_value, self._unit, self._axis_size)
         else:
-            return Axis(self._value + other._percent_value, self._unit, self._screen_size)
+            return Axis(self._value + other._percent_value, self._unit, self._axis_size)
 
     def __sub__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value - other._value, self._unit, self._screen_size)
+            return Axis(self._value - other._value, self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value - other._char_value, self._unit, self._screen_size)
+            return Axis(self._value - other._char_value, self._unit, self._axis_size)
         else:
-            return Axis(self._value - other._percent_value, self._unit, self._screen_size)
+            return Axis(self._value - other._percent_value, self._unit, self._axis_size)
 
     def __mul__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value * other._value, self._unit, self._screen_size)
+            return Axis(self._value * other._value, self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value * other._char_value, self._unit, self._screen_size)
+            return Axis(self._value * other._char_value, self._unit, self._axis_size)
         else:
-            return Axis(self._value * other._percent_value, self._unit, self._screen_size)
+            return Axis(self._value * other._percent_value, self._unit, self._axis_size)
 
     def __truediv__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value / other._value, self._unit, self._screen_size)
+            return Axis(self._value / other._value, self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value / other._char_value, self._unit, self._screen_size)
+            return Axis(self._value / other._char_value, self._unit, self._axis_size)
         else:
-            return Axis(self._value / other._percent_value, self._unit, self._screen_size)
+            return Axis(self._value / other._percent_value, self._unit, self._axis_size)
 
     def __floordiv__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value // other._value, self._unit, self._screen_size)
+            return Axis(self._value // other._value, self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value // other._char_value, self._unit, self._screen_size)
+            return Axis(self._value // other._char_value, self._unit, self._axis_size)
         else:
-            return Axis(self._value // other._percent_value, self._unit, self._screen_size)
+            return Axis(self._value // other._percent_value, self._unit, self._axis_size)
 
     def __mod__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value % other._value, self._unit, self._screen_size)
+            return Axis(self._value % other._value, self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value % other._char_value, self._unit, self._screen_size)
+            return Axis(self._value % other._char_value, self._unit, self._axis_size)
         else:
-            return Axis(self._value % other._percent_value, self._unit, self._screen_size)
+            return Axis(self._value % other._percent_value, self._unit, self._axis_size)
 
     def __pow__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value ** other._value, self._unit, self._screen_size)
+            return Axis(self._value ** other._value, self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value ** other._char_value, self._unit, self._screen_size)
+            return Axis(self._value ** other._char_value, self._unit, self._axis_size)
         else:
-            return Axis(self._value ** other._percent_value, self._unit, self._screen_size)
+            return Axis(self._value ** other._percent_value, self._unit, self._axis_size)
 
     def __abs__(self) -> 'Axis':
-        return Axis(abs(self._value), self._unit, self._screen_size)
+        return Axis(abs(self._value), self._unit, self._axis_size)
 
     def __neg__(self) -> 'Axis':
-        return Axis(-self._value, self._unit, self._screen_size)
+        return Axis(-self._value, self._unit, self._axis_size)
 
     def __pos__(self) -> 'Axis':
-        return Axis(+self._value, self._unit, self._screen_size)
+        return Axis(+self._value, self._unit, self._axis_size)
 
     def __round__(self, n: int = 0) -> 'Axis':
-        return Axis(round(self._value, n), self._unit, self._screen_size)
+        return Axis(round(self._value, n), self._unit, self._axis_size)
 
     def __floor__(self) -> 'Axis':
-        return Axis(self._value // 1, self._unit, self._screen_size)
+        return Axis(self._value // 1, self._unit, self._axis_size)
 
     def __ceil__(self) -> 'Axis':
-        return Axis(self._value // 1 + 1, self._unit, self._screen_size)
+        return Axis(self._value // 1 + 1, self._unit, self._axis_size)
 
     def __trunc__(self) -> 'Axis':
-        return Axis(self._value // 1, self._unit, self._screen_size)
+        return Axis(self._value // 1, self._unit, self._axis_size)
 
     def __int__(self) -> int:
         return int(self._value)

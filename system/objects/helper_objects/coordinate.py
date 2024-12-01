@@ -1,6 +1,6 @@
 import copy
 
-import system.terminal_system.helper_objects.axis as axis
+import system.objects.helper_objects.axis as axis
 
 
 class Coordinate:
@@ -16,14 +16,18 @@ class Coordinate:
         y_percent (float): The percentage value of the y-axis.
     """
 
-    def __init__(self, axes: tuple[axis.Axis, axis.Axis]) -> None:
+    def __init__(self, x_axis: axis.Axis = axis.Axis(), y_axis: axis.Axis = axis.Axis()) -> None:
         """Initialize the Coordinate object.
 
         Args:
-            axes (tuple[axis.Axis, axis.Axis]):
-                The x and y axes of the coordinate.
+            x_axis (axis.Axis, optional):
+                The x-axis.
+                Defaults to axis.Axis().
+            y_axis (axis.Axis, optional):
+                The y-axis.
+                Defaults to axis.Axis().
         """
-        self._x_axis, self._y_axis = axes
+        self._x_axis, self._y_axis = x_axis, y_axis
 
         self._screen_size = (self._x_axis.screen_size, self._y_axis.screen_size)
 
@@ -231,7 +235,7 @@ class Coordinate:
         if not isinstance(other, Coordinate):
             raise TypeError(f"unsupported operand type(s) for +: 'Coordinate' and '{type(other)}'")
 
-        return Coordinate((self._x_axis + other.x_axis, self._y_axis + other.y_axis))
+        return Coordinate(self._x_axis + other.x_axis, self._y_axis + other.y_axis)
 
     def __sub__(self, other: object) -> 'Coordinate':
         """Subtract the coordinate from another object.
@@ -247,7 +251,7 @@ class Coordinate:
         if not isinstance(other, Coordinate):
             raise TypeError(f"unsupported operand type(s) for -: 'Coordinate' and '{type(other)}'")
 
-        return Coordinate((self._x_axis - other.x_axis, self._y_axis - other.y_axis))
+        return Coordinate(self._x_axis - other.x_axis, self._y_axis - other.y_axis)
 
     def __mul__(self, other: object) -> 'Coordinate':
         """Multiply the coordinate by another object.
@@ -263,7 +267,7 @@ class Coordinate:
         if not isinstance(other, Coordinate):
             raise TypeError(f"unsupported operand type(s) for *: 'Coordinate' and '{type(other)}'")
 
-        return Coordinate((self._x_axis * other.x_axis, self._y_axis * other.y_axis))
+        return Coordinate(self._x_axis * other.x_axis, self._y_axis * other.y_axis)
 
     def __truediv__(self, other: object) -> 'Coordinate':
         """Divide the coordinate by another object.
@@ -279,7 +283,7 @@ class Coordinate:
         if not isinstance(other, Coordinate):
             raise TypeError(f"unsupported operand type(s) for /: 'Coordinate' and '{type(other)}'")
 
-        return Coordinate((self._x_axis / other.x_axis, self._y_axis / other.y_axis))
+        return Coordinate(self._x_axis / other.x_axis, self._y_axis / other.y_axis)
 
     def __floordiv__(self, other: object) -> 'Coordinate':
         """Floor divide the coordinate by another object.
@@ -295,7 +299,7 @@ class Coordinate:
         if not isinstance(other, Coordinate):
             raise TypeError(f"unsupported operand type(s) for //: 'Coordinate' and '{type(other)}'")
 
-        return Coordinate((self._x_axis // other.x_axis, self._y_axis // other.y_axis))
+        return Coordinate(self._x_axis // other.x_axis, self._y_axis // other.y_axis)
 
     def __mod__(self, other: object) -> 'Coordinate':
         """Mod the coordinate by another object.
@@ -311,7 +315,7 @@ class Coordinate:
         if not isinstance(other, Coordinate):
             raise TypeError(f"unsupported operand type(s) for %: 'Coordinate' and '{type(other)}'")
 
-        return Coordinate((self._x_axis % other.x_axis, self._y_axis % other.y_axis))
+        return Coordinate(self._x_axis % other.x_axis, self._y_axis % other.y_axis)
 
     def __pow__(self, other: object) -> 'Coordinate':
         """Raise the coordinate to the power of another object.
@@ -327,7 +331,7 @@ class Coordinate:
         if not isinstance(other, Coordinate):
             raise TypeError(f"unsupported operand type(s) for **: 'Coordinate' and '{type(other)}'")
 
-        return Coordinate((self._x_axis ** other.x_axis, self._y_axis ** other.y_axis))
+        return Coordinate(self._x_axis ** other.x_axis, self._y_axis ** other.y_axis)
 
     def __getitem__(self, item: int) -> axis.Axis:
         """Get the axis at the index.
@@ -405,7 +409,7 @@ class Coordinate:
             Coordinate:
                 A shallow copy of the coordinate.
         """
-        return Coordinate((self._x_axis, self._y_axis))
+        return Coordinate(self._x_axis, self._y_axis)
 
     def __deepcopy__(self, memo_dict) -> 'Coordinate':
         """Return a deep copy of the coordinate.
@@ -418,7 +422,7 @@ class Coordinate:
             Coordinate:
                 A deep copy of the coordinate.
         """
-        return Coordinate((copy.deepcopy(self._x_axis), copy.deepcopy(self._y_axis)))
+        return Coordinate(copy.deepcopy(self._x_axis), copy.deepcopy(self._y_axis))
 
     def __bool__(self) -> bool:
         """Return whether the coordinate is true.
@@ -436,7 +440,7 @@ class Coordinate:
             Coordinate:
                 The negation of the coordinate.
         """
-        return Coordinate((-self._x_axis, -self._y_axis))
+        return Coordinate(-self._x_axis, -self._y_axis)
 
     def __pos__(self) -> 'Coordinate':
         """Return the positive of the coordinate.
@@ -445,7 +449,7 @@ class Coordinate:
             Coordinate:
                 The positive of the coordinate.
         """
-        return Coordinate((+self._x_axis, +self._y_axis))
+        return Coordinate(+self._x_axis, +self._y_axis)
 
     def __abs__(self) -> 'Coordinate':
         """Return the absolute value of the coordinate.
@@ -454,7 +458,7 @@ class Coordinate:
             Coordinate:
                 The absolute value of the coordinate.
         """
-        return Coordinate((abs(self._x_axis), abs(self._y_axis)))
+        return Coordinate(abs(self._x_axis), abs(self._y_axis))
 
     def __round__(self, n: int = 0) -> 'Coordinate':
         """Return the rounded value of the coordinate.
@@ -468,4 +472,4 @@ class Coordinate:
             Coordinate:
                 The rounded value of the coordinate.
         """
-        return Coordinate((round(self._x_axis, n), round(self._y_axis, n)))
+        return Coordinate(round(self._x_axis, n), round(self._y_axis, n))

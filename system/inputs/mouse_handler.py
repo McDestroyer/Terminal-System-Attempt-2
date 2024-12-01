@@ -6,25 +6,48 @@ from pynput import mouse as mouse_suppressor
 # import win32gui  # TODO: Find a way to make this work on python 3.13 and above.
 import pywinctl
 
+from system.inputs.generic_input import GenericInput
 import system.inputs.button as button
 import system.utilities.class_tools as tools
-from system.utilities import rect
+import system.utilities.rect as rect
+import system.objects.helper_objects.coordinate as coord
+import system.objects.helper_objects.axis as axis
 
 
-class MouseHandler:
-    def __init__(self, window_name: str = "TerminalSystem", in_editor: bool = False) -> None:
+class MouseHandler(GenericInput):
+    """Handles the mouse inputs.
+
+    Implements:
+        GenericInput
+
+    Properties:
+        position (tuple[int, int]): The position of the mouse.
+
+    Methods:
+        get_left_click: Get the state of the left click.
+        is_focused: Whether the window is focused or not.
+        update_inputs: Update the inputs dictionary and refresh the window rect.
+        get_inputs: Get the input dictionary.
+
+    """
+    def __init__(self, window_name: str = "TerminalSystem", screen_size: coord.Coordinate = coord.Coordinate(),
+                 in_editor: bool = False) -> None:
         """Initialize an instance of the class.
 
         Args:
             window_name (str, optional):
                 The name of the window to get inputs from.
                 Defaults to "TerminalSystem".
+            screen_size (coord.Coordinate, optional):
+                The size of the screen. Used to calculate the position of the mouse in characters. Only ignored if the
+                program is running in the editor.
             in_editor (bool, optional):
                 Whether the program is running in the editor. WARNING: The program will crash if this is set to False
                 and the program is running in the editor because the window name will not be found.
                 Defaults to False.
         """
         self._window_name = window_name
+        self._screen_size = screen_size
         self._in_editor = in_editor
 
         self._window = self._get_window()
@@ -33,7 +56,11 @@ class MouseHandler:
         self._wheel_delta = 0
         self._wheel_position = 0
 
-        self._position = (0, 0)
+        self._absolute_position = (0, 0)
+        self._mouse_char_position = coord.Coordinate(
+            axis.Axis(0, axis_size=self._screen_size.x_char),
+            axis.Axis(0, axis_size=self._screen_size.y_char)
+        )
 
         self._buttons = {}
         self._button_states = {}
@@ -57,37 +84,81 @@ class MouseHandler:
 
         # Suppress the mouse.
         self._suppress_mouse = False
-        self.listener = mouse_suppressor.Listener(win32_event_filter=self.win32_event_filter)
+        self.listener = mouse_suppressor.Listener(win32_event_filter=self._win32_event_filter)
         self.listener.start()
 
     @property
     def position(self) -> tuple[int, int]:
-        return self._position
+        return self._absolute_position
 
     @position.setter
     def position(self, value: tuple[int, int]):
         mouse.move(value[0], value[1])
-        self._position = value
+        self._absolute_position = value
 
     def get_left_click(self) -> bool:
         return self._is_clicked
 
     def is_focused(self) -> bool:
+        """Whether the window is focused or not.
+
+        Returns:
+            bool: Whether the window is focused or not.
+        """
         return self._window == pywinctl.getActiveWindow()
 
+    def _get_mouse_relative_position(self) -> tuple[int, int]:
+        """Get the mouse position relative to the window.
+
+        Returns:
+            tuple[int, int]: The mouse position relative to the window.
+        """
+        return self._absolute_position[0] - self._window_rect.left, self._absolute_position[1] - self._window_rect.top
+
+    def _get_mouse_char_position(self) -> coord.Coordinate:
+        """Get the mouse position in characters.
+
+        Returns:
+            coord.Coordinate: The mouse position in characters.
+        """
+        # Get the position of the mouse relative to the window.
+        rel_pos = self._get_mouse_relative_position()
+
+        # Get the screen width and height in simplified terms.
+        pixel_width = self._window_rect.right - self._window_rect.left
+        pixel_height = self._window_rect.bottom - self._window_rect.top
+
+        char_width = self._mouse_char_position.screen_size[0]
+        char_height = self._mouse_char_position.screen_size[1]
+
+        # Get the normalized position.
+        normal_x = float(rel_pos[0]) / float(pixel_width)
+        normal_y = float(rel_pos[1]) / float(pixel_height)
+
+        # Get the character position.
+        char_pos_x = int(normal_x * char_width)
+        char_pos_y = int(normal_y * char_height)
+
+        # Convert to axes.
+        self._mouse_char_position.x_axis.value = char_pos_x
+        self._mouse_char_position.y_axis.value = char_pos_y
+
+        return self._mouse_char_position
+
     def update_inputs(self) -> None:
+        """Update the inputs dictionary and refresh the window rect."""
         if self.is_focused():
             # Suppress the mouse if the window is focused.
             self._suppress_mouse = True
             self._is_focused = True
             self._update_window_rect()
-            self._position = mouse.get_position()
+            self._absolute_position = mouse.get_position()
 
             # Update the mouse inputs
             self._inputs = {
                 "wheel": self._wheel_position,
                 "wheel_delta": self._wheel_delta,
-                "position": self._position,
+                "position": self._absolute_position,
             }
 
             for btn in self._buttons:
@@ -149,6 +220,8 @@ class MouseHandler:
             os.system("title " + self._window_name)
 
         # Get the window itself.
+        window_list = pywinctl.getWindowsWithTitle(self._window_name)
+
         return window_list[0]
 
     def _update_window_rect(self) -> None:
@@ -165,11 +238,22 @@ class MouseHandler:
             bottom=self._window.rect.bottom + self._window_rect_offsets.bottom,
         )
 
-    def win32_event_filter(self, msg, _) -> bool:
+    def _win32_event_filter(self, msg, _) -> bool:
+        """Filter the win32 events.
+
+        Args:
+            msg (int):
+                The message of the event.
+            _ (int):
+                The data of the event.
+
+        Returns:
+            bool: Whether the event was filtered or not.
+        """
         # Suppress Left click
         if (msg == 513 or msg == 514) and self._window_rect and (
-                self._window_rect.left < self._position[0] < self._window_rect.right and
-                self._window_rect.top < self._position[1] < self._window_rect.bottom
+                self._window_rect.left < self._absolute_position[0] < self._window_rect.right and
+                self._window_rect.top < self._absolute_position[1] < self._window_rect.bottom
         ):
             self._is_clicked = True if msg == 513 else False
             self.listener.suppress_event()

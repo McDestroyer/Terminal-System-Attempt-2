@@ -18,13 +18,13 @@ class Pixel:
         set(other: Pixel) -> None:
             Set the pixel to be the same as another pixel.
     """
-    def __init__(self, char: str = " ", colors: list[str] | None = None, cancel_code: str = "\033[0m") -> None:
+    def __init__(self, char: str = "█", colors: list[str] | None = None, cancel_code: str = "\033[0m") -> None:
         """Initialize the pixel.
 
         Args:
             char (str, optional):
                 The character of the pixel.
-                Defaults to " ".
+                Defaults to "█".
             colors (list[str] | None, optional):
                 The colors of the pixel.
                 Defaults to [].

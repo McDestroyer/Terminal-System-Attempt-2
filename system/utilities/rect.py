@@ -86,6 +86,69 @@ class Rect:
         self.top += dy
         self.bottom += dy
 
+    @property
+    def width(self) -> int:
+        """Return the width of the rectangle."""
+        return self.right - self.left
+
+    @property
+    def height(self) -> int:
+        """Return the height of the rectangle."""
+        return self.bottom - self.top
+
+    def copy(self) -> "Rect":
+        """Return a copy of the rectangle."""
+        return Rect(self.left, self.top, self.right, self.bottom)
+
     def __str__(self) -> str:
         """Return the string representation of the object."""
         return f"Rect({self.top}, {self.left}, {self.right}, {self.bottom})"
+
+    def __repr__(self) -> str:
+        """Return the string representation of the object."""
+        return self.__str__()
+
+    def __eq__(self, other: "Rect") -> bool:
+        """Return whether the rectangles are equal.
+
+        Args:
+            other (Rect):
+                The other rectangle.
+
+        Returns:
+            bool:
+                Whether the rectangles are equal.
+        """
+        return (self.left == other.left and
+                self.top == other.top and
+                self.right == other.right and
+                self.bottom == other.bottom)
+
+    def __ne__(self, other: "Rect") -> bool:
+        """Return whether the rectangles are not equal.
+
+        Args:
+            other (Rect):
+                The other rectangle.
+
+        Returns:
+            bool:
+                Whether the rectangles are not equal.
+        """
+        return not self.__eq__(other)
+
+    def __contains__(self, other: "Rect") -> bool:
+        """Return whether the rectangle contains the other rectangle.
+
+        Args:
+            other (Rect):
+                The other rectangle.
+
+        Returns:
+            bool:
+                Whether the rectangle contains the other rectangle.
+        """
+        return (self.left <= other.left and
+                self.top <= other.top and
+                self.right >= other.right and
+                self.bottom >= other.bottom)

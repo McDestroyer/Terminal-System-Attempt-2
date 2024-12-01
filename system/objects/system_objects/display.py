@@ -3,28 +3,35 @@ from copy import deepcopy
 
 import system.utilities.cursor as cursor
 
-import system.terminal_system.helper_objects.pixel_grid as pixel_grid
-import system.terminal_system.helper_objects.coordinate as coord
-import system.terminal_system.helper_objects.axis as ax
+import system.objects.helper_objects.pixel_grid as pixel_grid
+import system.objects.helper_objects.coordinate as coord
+import system.objects.helper_objects.axis as ax
 
 
 class Display:
 
-    def __init__(self, display_size: coord.Coordinate) -> None:
+    def __init__(self, display_grid: pixel_grid.PixelGrid) -> None:
         """Initialize the display.
 
         Args:
-            display_size (coord.Coordinate):
+            display_grid (pixel_grid.PixelGrid):
                 The size of the display.
         """
-        self._display_size = copy.deepcopy(display_size)
+        self._display_size = copy.deepcopy(display_grid.size)
 
-        self._display_pixel_grid = pixel_grid.PixelGrid(coord.Coordinate((ax.Axis(), ax.Axis())), display_size)
+        self._display_pixel_grid = pixel_grid.PixelGrid(
+            coord.Coordinate(
+                ax.Axis(value=0, axis_size=self._display_size.x_char),
+                ax.Axis(value=0, axis_size=self._display_size.y_char),
+            ),
+            self._display_size,
+            default_pixel=copy.deepcopy(display_grid.default_pixel),
+        )
         self._previous_pixel_grid = copy.deepcopy(self._display_pixel_grid)
 
-        self._display_string = ""
+        self._display_string = self._display_pixel_grid.to_string()
 
-        cursor.clear_screen()
+        self.refresh_display()
 
     # Display functions.
 
@@ -56,15 +63,32 @@ class Display:
             self.refresh_display()
             return
 
+        if len(self._display_pixel_grid.grid) != len(self._previous_pixel_grid.grid):
+            print("Display size mismatch.")
+            return
+
         # Cycle through the display array and print the characters that have changed.
         for y, row in enumerate(self._display_pixel_grid.grid):
             for x, pixel in enumerate(row):
-                if pixel != self._previous_pixel_grid.grid[x][y]:
-                    # Possibly inefficient, printing separately to jump each time, but it works.
-                    # TODO: Optimize this. Maybe use a string buffer and only print when a pixel isn't the same as the
-                    #  previous one.
-                    cursor.set_pos(x, y)
-                    print(pixel.printable_str, end="", flush=False)
+                try:
+                    if pixel != self._previous_pixel_grid.grid[y][x]:
+                        # Possibly inefficient, printing separately to jump each time, but it works.
+                        # TODO: Optimize this. Maybe use a string buffer and only print when a pixel isn't the same as the
+                        #  previous one.
+                        cursor.set_pos(x, y)
+                        print(pixel.printable_str, end="", flush=False)
+                except IndexError:
+                    print(f"Index error at {x}, {y}")
+                    print(f"Display size: {self._display_pixel_grid.size}")
+                    print(f"Previous display size: {self._previous_pixel_grid.size}")
+                    print(f"Display grid length: {len(self._display_pixel_grid.grid)}")
+                    print(f"Previous display grid length: {len(self._previous_pixel_grid.grid)}")
+                    print(f"Display grid x length: {len(self._display_pixel_grid.grid[0])}")
+                    print(f"Previous display grid x length: {len(self._previous_pixel_grid.grid[0])}")
+                    print(f"Row length: {len(row)}")
+                    print(f"Pixel: {pixel}")
+
+                    raise IndexError
 
         # Finish by resetting the cursor to the top left and flushing the print queue.
         cursor.set_pos(0, 0)
@@ -156,4 +180,4 @@ class Display:
 
 
 if __name__ == "__main__":
-    display = Display(coord.Coordinate((ax.Axis(10), ax.Axis(140))))
+    display = Display(coord.Coordinate(ax.Axis(10), ax.Axis(140)))

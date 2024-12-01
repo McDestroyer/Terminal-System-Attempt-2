@@ -1,5 +1,5 @@
-import system.terminal_system.helper_objects.pixel as pixel
-import system.terminal_system.helper_objects.coordinate as coord
+import system.objects.helper_objects.pixel as pixel
+import system.objects.helper_objects.coordinate as coord
 
 
 class PixelGrid:

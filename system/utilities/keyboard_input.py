@@ -1,20 +1,4 @@
 """Work with keyboard inputs."""
-# Disables annoying and usually incorrect warnings.
-# pylint: disable=wrong-import-position
-# pylint: disable=import-error
-
-import os
-import pkg_resources
-
-# Checks to see if the dependency is installed. If not, installs it.
-DEPENDENCY = "keyboard"
-try:
-    pkg_resources.require(DEPENDENCY)
-except pkg_resources.DistributionNotFound:
-    os.system(f'pip install {DEPENDENCY} --quiet')
-    os.system(f'python -m pip install {DEPENDENCY} --quiet')
-    os.system(f'python3 -m pip install {DEPENDENCY} --quiet')
-    os.system(f'py -m pip install {DEPENDENCY} --quiet')
 
 import keyboard
 
