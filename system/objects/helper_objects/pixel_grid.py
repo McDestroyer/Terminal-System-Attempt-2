@@ -1,5 +1,6 @@
 import system.objects.helper_objects.pixel as pixel
 import system.objects.helper_objects.coordinate as coord
+from system.objects.helper_objects import axis
 
 
 class PixelGrid:
@@ -129,6 +130,19 @@ class PixelGrid:
                 The new default pixel of the PixelGrid.
         """
         self._default_pixel = new_default_pixel
+
+    @grid.setter
+    def grid(self, new_grid: list[list[pixel.Pixel]]) -> None:
+        """Set the grid of the PixelGrid.
+
+        Args:
+            new_grid (list[list[Pixel]]):
+                The new grid of the PixelGrid.
+        """
+        self._grid = new_grid
+
+        self._size.x_char = len(new_grid[0])
+        self._size.y_char = len(new_grid)
 
     def clear(self) -> None:
         """Clear the PixelGrid. Set all pixels to the default pixel."""
