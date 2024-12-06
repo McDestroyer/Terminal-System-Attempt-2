@@ -1,3 +1,4 @@
+from system.objects.helper_objects.coordinate_objects.point import Point
 from system.terminal_system import TerminalSystem
 
 
@@ -10,7 +11,7 @@ class Main:
 
         self._terminal = TerminalSystem(
             name="Example Program",
-            minimum_screen_size=(50, 20),
+            minimum_screen_size=Point(50, 20),
             desired_fps=30,
             mouse_enabled=True,
             in_editor=True,

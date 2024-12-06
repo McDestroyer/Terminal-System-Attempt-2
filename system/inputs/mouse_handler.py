@@ -10,8 +10,9 @@ from system.inputs.generic_input import GenericInput
 import system.inputs.button as button
 import system.utilities.class_tools as tools
 import system.utilities.rect as rect
-import system.objects.helper_objects.coordinate as coord
-import system.objects.helper_objects.axis as axis
+import system.objects.helper_objects.coordinate_objects.coordinate as coord
+import system.objects.helper_objects.coordinate_objects.axis as axis
+from system.objects.helper_objects.coordinate_objects.point import Point
 
 
 class MouseHandler(GenericInput):
@@ -66,7 +67,7 @@ class MouseHandler(GenericInput):
         self._button_states = {}
         self._is_clicked = False
 
-        self._inputs = {}
+        self._inputs: dict[str, button.Button | int | Point] = {}
 
         # Create the buttons.
         for btn in [mouse.RIGHT, mouse.MIDDLE, mouse.X, mouse.X2]:
@@ -159,6 +160,7 @@ class MouseHandler(GenericInput):
                 "wheel": self._wheel_position,
                 "wheel_delta": self._wheel_delta,
                 "position": self._absolute_position,
+                "char_position": self._get_mouse_char_position()
             }
 
             for btn in self._buttons:
@@ -181,11 +183,11 @@ class MouseHandler(GenericInput):
             # Reset the wheel delta after the inputs have been updated.
             self._wheel_delta = 0
 
-    def get_inputs(self) -> dict[str, button.Button | int | tuple[int, int]]:
+    def get_inputs(self) -> dict[str, button.Button | int | Point]:
         """Get the input dictionary.
 
         Returns:
-            dict[str, button.Button | int | tuple[int, int]]: The buttons, mouse position, wheel position/delta.
+            dict[str, button.Button | int | Point]: The buttons, mouse position, wheel position/delta.
         """
         return self._inputs
 

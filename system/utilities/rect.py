@@ -37,7 +37,7 @@ class Rect:
         self.bottom = bottom
 
     def inside(self, x: int, y: int) -> bool:
-        """Return whether the point is inside the rectangle.
+        """Return whether the point is inside the rectangle, inclusive.
 
         Args:
             x (int):

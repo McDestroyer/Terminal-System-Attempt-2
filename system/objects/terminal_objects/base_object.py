@@ -1,19 +1,62 @@
-import system.objects.helper_objects.coordinate as coord
+import system.objects.helper_objects.coordinate_objects.coordinate as coord
 from system.inputs.input_handler import InputHandler
-from system.objects.helper_objects import pixel_grid, axis
+from system.objects.helper_objects.pixel_objects import pixel_grid
+from system.objects.helper_objects.coordinate_objects.point import Point
 
 
 class BaseObject:
     def __init__(self, name: str, description: str, initial_grid: pixel_grid.PixelGrid,
                  z_index: float = 0, visible: bool = True) -> None:
+        """Initialize the object.
+
+        Args:
+            name (str):
+                The name of the object.
+            description (str):
+                The description of the object.
+            initial_grid (PixelGrid):
+                The initial grid of the object.
+            z_index (float, optional):
+                The z-index of the object.
+                Defaults to 0.
+            visible (bool, optional):
+                Whether the object is visible.
+                Defaults to True.
+        """
         self.name = name
         self.description = description
-        self.grid = initial_grid
-        self.z_index = z_index
+        self._grid = initial_grid
+        self._z_index = z_index
         self.visible = visible
 
         self.should_draw = True
-        self.mouse_over = None
+        self._mouse_over: Point | None = None
+
+    @property
+    def grid(self):
+        return self._grid
+
+    @grid.setter
+    def grid(self, value: pixel_grid.PixelGrid):
+        self._grid = value
+        self.should_draw = True
+
+    @property
+    def z_index(self):
+        return self._z_index
+
+    @z_index.setter
+    def z_index(self, value: float):
+        self._z_index = value
+        self.should_draw = True
+
+    @property
+    def mouse_over(self):
+        return self._mouse_over
+
+    @mouse_over.setter
+    def mouse_over(self, value: Point | None):
+        self._mouse_over = value
 
     def update(self, input_handler: InputHandler) -> None:
         """Update the object based on the inputs from the input handler.

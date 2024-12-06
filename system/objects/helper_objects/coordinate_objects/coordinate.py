@@ -1,6 +1,7 @@
 import copy
 
-import system.objects.helper_objects.axis as axis
+import system.objects.helper_objects.coordinate_objects.axis as axis
+from system.objects.helper_objects.coordinate_objects.point import Point
 
 
 class Coordinate:
@@ -29,24 +30,24 @@ class Coordinate:
         """
         self._x_axis, self._y_axis = x_axis, y_axis
 
-        self._screen_size = (self._x_axis.screen_size, self._y_axis.screen_size)
+        self._screen_size = Point(self._x_axis.screen_size, self._y_axis.screen_size)
 
     @property
-    def screen_size(self) -> tuple[int, int]:
+    def screen_size(self) -> Point:
         """Return the screen size.
 
         Returns:
-            tuple[int, int]:
+            Point:
                 The screen size.
         """
         return self._screen_size
 
     @screen_size.setter
-    def screen_size(self, new_screen_size: tuple[int, int]) -> None:
+    def screen_size(self, new_screen_size: Point) -> None:
         """Set the screen size.
 
         Args:
-            new_screen_size (tuple[int, int]):
+            new_screen_size (Point):
                 The new screen size.
         """
         self._screen_size = new_screen_size

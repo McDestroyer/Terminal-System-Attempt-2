@@ -3,7 +3,7 @@ import copy
 
 class Point:
 
-    def __init__(self, x: float = 0, y: float = 0):
+    def __init__(self, x: int = 0, y: int = 0):
         self.x = x
         self.y = y
 
@@ -43,7 +43,7 @@ class Point:
     @as_str.setter
     def as_str(self, new_str):
         new_str = new_str.replace("(", "").replace(")", "")
-        self.x, self.y = map(float, new_str.split(","))
+        self.x, self.y = map(int, new_str.split(","))
 
     def __str__(self):
         return f"({self.x}, {self.y})"

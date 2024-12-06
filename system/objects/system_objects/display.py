@@ -1,11 +1,12 @@
 import copy
+import sys
 from copy import deepcopy
 
 import system.utilities.cursor as cursor
 
-import system.objects.helper_objects.pixel_grid as pixel_grid
-import system.objects.helper_objects.coordinate as coord
-import system.objects.helper_objects.axis as ax
+import system.objects.helper_objects.pixel_objects.pixel_grid as pixel_grid
+import system.objects.helper_objects.coordinate_objects.coordinate as coord
+import system.objects.helper_objects.coordinate_objects.axis as ax
 
 
 class Display:
@@ -15,7 +16,7 @@ class Display:
 
         Args:
             display_grid (pixel_grid.PixelGrid):
-                The size of the display.
+                The display grid to use.
         """
         self._display_size = copy.deepcopy(display_grid.size)
 
@@ -73,8 +74,8 @@ class Display:
                 try:
                     if pixel != self._previous_pixel_grid.grid[y][x]:
                         # Possibly inefficient, printing separately to jump each time, but it works.
-                        # TODO: Optimize this. Maybe use a string buffer and only print when a pixel isn't the same as the
-                        #  previous one.
+                        # TODO: Optimize this. Maybe use a string buffer and only print when a pixel isn't the same as
+                        #  the previous one.
                         cursor.set_pos(x, y)
                         print(pixel.printable_str, end="", flush=False)
                 except IndexError:
@@ -88,7 +89,7 @@ class Display:
                     print(f"Row length: {len(row)}")
                     print(f"Pixel: {pixel}")
 
-                    raise IndexError
+                    sys.exit(1)
 
         # Finish by resetting the cursor to the top left and flushing the print queue.
         cursor.set_pos(0, 0)
@@ -180,4 +181,5 @@ class Display:
 
 
 if __name__ == "__main__":
-    display = Display(coord.Coordinate(ax.Axis(10), ax.Axis(140)))
+    # display = Display()
+    pass

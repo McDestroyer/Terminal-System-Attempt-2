@@ -1,14 +1,24 @@
+import os
+import time
+
+from system.inputs.button import Button
+from system.inputs.generic_input import GenericInput
 from system.inputs.input_handler import InputHandler
 import system.utilities.class_tools as tools
-from system.objects.helper_objects import pixel_grid, coordinate as coord, axis
+from system.objects.helper_objects.coordinate_objects import coordinate as coord, axis
+from system.objects.helper_objects.coordinate_objects.axis import Axis
+from system.objects.helper_objects.coordinate_objects.point import Point
+from system.objects.helper_objects.pixel_objects import pixel_grid
 from system.objects.system_objects.display_manager import DisplayManager
+from system.utilities import cursor
+from system.utilities.color import Colors
 
 
 class TerminalSystem:
     def __init__(
             self,
             name: str,
-            minimum_screen_size=(50, 20),
+            minimum_screen_size=Point(50, 20),
             desired_fps=30,
             mouse_enabled=True,
             in_editor=True,
@@ -18,9 +28,9 @@ class TerminalSystem:
         Args:
             name (str):
                 The name of the terminal system.
-            minimum_screen_size (tuple[int, int], optional):
+            minimum_screen_size (Point, optional):
                 The minimum screen size.
-                Defaults to (50, 20).
+                Defaults to Point(50, 20).
             desired_fps (int, optional):
                 The desired FPS.
                 Defaults to 30.
@@ -41,35 +51,103 @@ class TerminalSystem:
         self.run: bool = True
         self._rate_limiter = tools.RateLimiter(self.desired_fps)
 
+        self.input_handler = InputHandler(self._name)
+
+        screen_size = self._calibrate_screen_size()
+
         self._initial_pixel_grid = pixel_grid.PixelGrid(
             coordinates=coord.Coordinate(
-                axis.Axis(axis_size=minimum_screen_size[0]),
-                axis.Axis(axis_size=minimum_screen_size[1])
+                Axis(axis_size=screen_size.x),
+                Axis(axis_size=screen_size.y)
             ),
             size=coord.Coordinate(
-                axis.Axis(value=minimum_screen_size[0], axis_size=minimum_screen_size[0]),
-                axis.Axis(value=minimum_screen_size[1], axis_size=minimum_screen_size[1])
+                Axis(value=screen_size.x, axis_size=screen_size.x),
+                Axis(value=screen_size.y, axis_size=screen_size.y)
             )
         )
 
-        self.input_handler = InputHandler(self._name)
         self.display_manager = DisplayManager(self._initial_pixel_grid)
 
-        self._inputs = {}
+        self._inputs: dict[GenericInput, dict[str, Button | Axis | int | Point]] = {}
 
     def update(self) -> None:
         """Update the terminal objects and get inputs."""
+        self.input_handler.update_inputs()
         self.inputs = self.input_handler.get_inputs()
-        self.display_manager.update()
+
+        self.display_manager.update(self.input_handler)
 
     def refresh_screen(self) -> None:
         """Print the terminal objects to the terminal."""
-        # TODO: Implement actually printing stuff here.
+        self.display_manager.refresh_screen()
         self._rate_limiter()
 
     def shutdown(self) -> None:
         """Stop the terminal system."""
         pass
+
+    def _calibrate_screen_size(self) -> Point:
+        """Calibrate the screen size.
+
+        Returns:
+            Point: The screen size.
+        """
+        # Clear the screen.
+        os.system("cls")
+
+        x = 156
+        y = 39
+
+        first = True
+        while True:
+            # Get input
+            self.input_handler.update_inputs()
+            self.inputs = self.input_handler.get_inputs()
+
+            kb = self.input_handler.kb
+
+            up = self.inputs[kb]["up"].held
+            down = self.inputs[kb]["down"].held
+            left = self.inputs[kb]["left"].held
+            right = self.inputs[kb]["right"].held
+            finish = self.inputs[kb]["enter"].just_pressed or self.inputs[kb]["esc"].just_pressed
+
+            # up = self.input_handler.kb.is_held("up")
+            # down = self.input_handler.kb.is_held("down")
+            # left = self.input_handler.kb.is_held("left")
+            # right = self.input_handler.kb.is_held("right")
+            # finish = self.input_handler.kb.is_newly_pressed("enter") or self.input_handler.kb.is_newly_pressed("esc")
+
+            if finish:
+                os.system("cls")
+                break
+            if up:
+                y = max(y - 1, self._minimum_screen_size.y)
+            if down:
+                y += 1
+            if left:
+                x = max(x - 1, self._minimum_screen_size.x)
+            if right:
+                x += 1
+
+            # Print
+            if up or down or left or right or first:
+                cursor.clear_screen()
+                cursor.set_pos()
+                for i in range(y):
+                    if i != 0:
+                        print()
+                    if i == y - 1 or i == 0:
+                        print(Colors.YELLOW + "█" * (x - 1) + Colors.BLUE + "█" + Colors.END, end="", flush=True)
+                        continue
+                    print(Colors.GREEN + "█" * (x - 1) + Colors.RED + "█" + Colors.END, end="", flush=True)
+                print("x: " + str(x) + " y: " + str(y), end="", flush=True)
+
+            first = False
+            # Sleep to avoid excessive speed
+            time.sleep(0.025)
+
+        return Point(x, y + 1)
 
     @property
     def name(self) -> str:
@@ -117,20 +195,20 @@ class TerminalSystem:
         return self._in_editor
 
     @property
-    def inputs(self) -> dict[str, str]:
+    def inputs(self) -> dict[GenericInput, dict[str, Button | Axis | int | Point]]:
         """Return the inputs.
 
         Returns:
-            dict[str, str]: The inputs.
+            dict[GenericInput, dict[str, Button | Axis | int | Point]]: The inputs.
         """
         return self._inputs
 
     @inputs.setter
-    def inputs(self, new_inputs: dict[str, str]) -> None:
+    def inputs(self, new_inputs: dict[GenericInput, dict[str, Button | Axis | int | Point]]) -> None:
         """Set the inputs.
 
         Args:
-            new_inputs (dict[str, str]):
+            new_inputs (dict[GenericInput, dict[str, Button | Axis | int | Point]]):
                 The new inputs.
         """
         self._inputs = new_inputs

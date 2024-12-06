@@ -1,11 +1,12 @@
 from system.inputs.button import Button
 from system.inputs.generic_input import GenericInput as Input
-from system.objects.helper_objects.axis import Axis
+from system.objects.helper_objects.coordinate_objects.axis import Axis
 
 import system.inputs.keyboard_handler as keyboard
 import system.inputs.mouse_handler as mouse
 import system.inputs.clipboard_handler as clipboard
 import system.inputs.binding_handler as binding
+from system.objects.helper_objects.coordinate_objects.point import Point
 
 
 class InputHandler:
@@ -50,19 +51,21 @@ class InputHandler:
 
         self.screen_is_focused = True
 
-    def get_inputs(self) -> dict[Input, dict[str, Button | Axis | int | tuple]]:
-        """Get the inputs from the keyboard and mouse.
-
-        Returns:
-            dict[Input, dict[str, Button | Axis | int | tuple]]:
-                The inputs from the keyboard and mouse.
-        """
+    def update_inputs(self) -> None:
+        """Update the inputs and store the values."""
         self.screen_is_focused = self.mouse.is_focused()
 
         # Update the inputs for all the input classes.
         for cls in self.input_classes:
             cls.update_inputs()
 
+    def get_inputs(self) -> dict[Input, dict[str, Button | Axis | int | Point]]:
+        """Get the inputs from the keyboard and mouse.
+
+        Returns:
+            dict[Input, dict[str, Button | Axis | int | Point]]:
+                The inputs from the keyboard and mouse.
+        """
         if self.screen_is_focused:
             # Get the inputs from all the input classes and return them.
             input_map = {}

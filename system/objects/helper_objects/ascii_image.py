@@ -1,20 +1,43 @@
 import copy
 import time
 
-from system.objects.helper_objects import pixel_grid, pixel, coordinate as coord, axis
-from system.utilities.color import Colors
+from system.objects.helper_objects.coordinate_objects import coordinate as coord, axis
+from system.objects.helper_objects.pixel_objects import pixel_grid, pixel
+from system.utilities import cursor
+from system.utilities.color import Colors, Color
+from system.objects.helper_objects.pixel_objects.pixel_theme import PixelTheme, ThemeDict
 
 
 class Image(pixel_grid.PixelGrid):
-    """The Image class for displaying an image on the terminal."""
+    """The Image class for displaying an image on the terminal.
 
-    def __init__(self, position: coord.Coordinate, image_frames: list[list[list[pixel.Pixel]]] | str) -> None:
+    Properties:
+        frame_count() -> int:
+            The number of frames in the image.
+        fps() -> float:
+            The frames per second of the image.
+        frame_delay() -> float:
+            The delay between frames in seconds.
+        current_frame() -> int:
+            The current frame of the image.
+        frames() -> list[list[list[pixel.Pixel]]]:
+            The frames of the image.
+        given_image_frames() -> list[list[list[pixel.Pixel]]] | str:
+            The given image frames.
+
+    Methods:
+        update_animation() -> bool:
+            Check if the frame should be updated and update it if necessary.
+    """
+
+    def __init__(self, position: coord.Coordinate,
+                 image_frames: list[list[list[pixel.Pixel]]] | str | list[pixel_grid.PixelGrid]) -> None:
         """Initialize the Image object.
 
         Args:
             position (coord.Coordinate):
                 The position of the image.
-            image_frames (list[list[list[pixel.Pixel]]] | str):
+            image_frames (list[list[list[pixel.Pixel]]] | str | pixel_grid.PixelGrid):
                 The image frames to display. If a string is passed, it will be assumed to be a path to an image file.
         """
         self._given_image_frames = image_frames
@@ -30,6 +53,9 @@ class Image(pixel_grid.PixelGrid):
         # Check if the frames are a string or a list. If it's a string, create the image from the file.
         if isinstance(self._given_image_frames, str):
             self._frames: list[list[list[pixel.Pixel]]] = self._get_grids_from_file(self._given_image_frames)
+        elif (isinstance(self._given_image_frames, list) and
+              isinstance(self._given_image_frames[0], pixel_grid.PixelGrid)):
+            self._frames: list[list[list[pixel.Pixel]]] = [frame.grid for frame in self._given_image_frames]
         else:
             self._frames: list[list[list[pixel.Pixel]]] = self._given_image_frames
 
@@ -76,7 +102,7 @@ class Image(pixel_grid.PixelGrid):
         return self._given_image_frames
 
     @pixel_grid.PixelGrid.size.setter
-    def size(self, new_size: coord.Coordinate) -> None:
+    def _size(self, new_size: coord.Coordinate) -> None:
         """Set the size of the image.
 
         Args:
@@ -217,7 +243,7 @@ def _extract_metadata(file_contents: list[str]) -> dict[str, int | list[str]]:
     return vals
 
 
-def _get_pixel_row(row: str, width: int, base_colors: list[str]) -> list[pixel.Pixel]:
+def _get_pixel_row(row: str, width: int, base_colors: list[Color]) -> list[pixel.Pixel]:
     """Get the pixel row from the image line.
 
     Args:
@@ -225,7 +251,7 @@ def _get_pixel_row(row: str, width: int, base_colors: list[str]) -> list[pixel.P
             The row of the image.
         width (int):
             The width of the image.
-        base_colors (list[str]):
+        base_colors (list[Color]):
             The base colors of the image.
 
     Returns:
@@ -240,8 +266,11 @@ def _get_pixel_row(row: str, width: int, base_colors: list[str]) -> list[pixel.P
     color_list = []
     color_string = ""
 
+    # Replace the escape sequences for the colors so that they work properly.
+    formatted_row = row.replace("\\033", "\033")
+
     # Get the pixel characters from the row.
-    for char in row:
+    for char in formatted_row:
         # If the color string isn't empty, we're in the middle of building a color code. Add the character to the color
         # code string.
         if color_string:
@@ -254,7 +283,7 @@ def _get_pixel_row(row: str, width: int, base_colors: list[str]) -> list[pixel.P
                 if color_string == Colors.END:
                     color_list.clear()
                 else:
-                    color_list.append(color_string)
+                    color_list.append(Colors.color_from_code(color_string))
                     color_string = ""
 
             # We'll just continue here because the other stuff won't apply.
@@ -270,7 +299,8 @@ def _get_pixel_row(row: str, width: int, base_colors: list[str]) -> list[pixel.P
         # Add it to the pixel row.
         else:
             char_count += 1
-            pixel_row.append(pixel.Pixel(char, base_colors + color_list))
+            theme_dict = ThemeDict(unspecified_theme=PixelTheme(base_colors + color_list))
+            pixel_row.append(pixel.Pixel(char, theme_dict))
 
         # If the character count is equal to the width of the image, break out of the loop.
         if char_count == width:
@@ -306,12 +336,17 @@ def _assemble_image_frames(file_contents: list[str], metadata: dict[str, int | s
         # blank lines between frames.
         line_offset = 2 + (metadata["height"] + 1) * frame_num
 
-        # To verify typing.
-        colors: str = metadata["base_colors"]
+        # Get the base colors from the metadata.
+        color_str: str = metadata["base_colors"].strip()
+
+        # Convert the color string to a list of colors.
+        base_colors: list[Color] = []
+        for color_code in color_str.split("\033")[1:]:
+            base_colors.append(Colors.color_from_code("\033" + color_code))
 
         # Assemble the frame grid from the file contents.
         for row in file_contents[line_offset:line_offset + metadata["height"]]:
-            frame_grid.append(_get_pixel_row(row, metadata["width"], [colors]))
+            frame_grid.append(_get_pixel_row(row, metadata["width"], base_colors))
 
         # Add the frame grid to the list of image frames.
         image_frames.append(frame_grid)
@@ -320,9 +355,11 @@ def _assemble_image_frames(file_contents: list[str], metadata: dict[str, int | s
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     # Create an image object.
     img = Image(coord.Coordinate(), "C:\\Users\\dafan\\OneDrive\\Desktop\\CS\\Side Project Games and Apps\\Terminal System Attempt 2\\system\\assets\\images\\flashing_logo.AAI")
 
+    print(f"Time to create image: {time.time() - start_time}")
     # Update the image.
     img.update_animation()
 
@@ -338,7 +375,9 @@ if __name__ == "__main__":
     print(img.grid)
 
     while True:
+        cursor.set_pos()
+        cursor.clear_screen()
         img.update_animation()
         print(img.to_string())
-        print("\n----------\n")
+        # print("\n----------\n")
         time.sleep(.5)
