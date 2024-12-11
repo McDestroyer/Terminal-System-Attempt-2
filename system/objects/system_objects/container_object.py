@@ -157,15 +157,19 @@ class ContainerObject(BaseObject):
         if self.grid != initial_grid:
             self.should_draw = True
 
-    def update(self, input_handler: InputHandler) -> None:
+    def update(self, input_handler: InputHandler) -> bool:
         """Update the object based on the inputs from the input handler.
 
         Args:
             input_handler (InputHandler):
                 The input handler.
+
+        Returns:
+            bool:
+                Whether the object has changed and needs to be redrawn.
         """
         # This should be called first in this method in any child classes of BaseObject.
-        super().update(input_handler)
+        self.should_draw = super().update(input_handler) or self.should_draw
 
         # Update all sub-objects.
         for obj in self._objects:
@@ -173,3 +177,5 @@ class ContainerObject(BaseObject):
 
         # Make sure the grid is updated for printing.
         self._update_grid()
+
+        return self.should_draw

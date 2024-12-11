@@ -10,21 +10,21 @@ class Axis:
     """A class to represent an axis on the screen.
 
     Properties:
-        value (float):
+        value (int):
             The value of the axis.
-        char_value (float):
+        char_value (int):
             The value of the axis in terms of characters.
-        percent_value (float):
+        percent_value (int):
             The value of the axis in terms of a percentage of the given screen size.
         screen_size (int):
             The size of the screen.
     """
 
-    def __init__(self, value: float = 0, unit: UnitNames = UnitNames.CHAR, axis_size: int = 1) -> None:
+    def __init__(self, value: int = 0, unit: UnitNames = UnitNames.CHAR, axis_size: int = 1) -> None:
         """Initialize the Axis object.
 
         Args:
-            value (float, optional):
+            value (int, optional):
                 The value of the axis.
                 Defaults to 0.
             unit (UnitNames, optional):
@@ -37,37 +37,37 @@ class Axis:
         self._unit: UnitNames = unit
         self._axis_size: int = axis_size
 
-        self._value: float = value
-        self._char_value: float = self._get_char_value()
-        self._percent_value: float = self._get_percent_value()
+        self._value: int = value
+        self._char_value: int = self._get_char_value()
+        self._percent_value: int = self._get_percent_value()
 
     @property
-    def value(self) -> float:
+    def value(self) -> int:
         return self._value
 
     @value.setter
-    def value(self, new_value: float) -> None:
+    def value(self, new_value: int) -> None:
         self._value = new_value
         self._char_value = self.char_value
         self._percent_value = self.percent_value
 
     @property
-    def char_value(self) -> float:
+    def char_value(self) -> int:
         return self._char_value
 
     @char_value.setter
-    def char_value(self, new_value: float) -> None:
+    def char_value(self, new_value: int) -> None:
         self._char_value = new_value
 
         self._value = self._get_value(UnitNames.CHAR)
         self._percent_value = self._get_percent_value()
 
     @property
-    def percent_value(self) -> float:
+    def percent_value(self) -> int:
         return self._percent_value
 
     @percent_value.setter
-    def percent_value(self, new_value: float) -> None:
+    def percent_value(self, new_value: int) -> None:
         self._percent_value = new_value
 
         self._value = self._get_value(UnitNames.PERCENT)
@@ -87,14 +87,14 @@ class Axis:
             self._char_value = self._get_char_value()
             self._value = self._get_value(self._unit)
 
-    def _get_value(self, unit: UnitNames) -> float:
+    def _get_value(self, unit: UnitNames) -> int:
         """Return the value of the axis in the specified unit.
         
         Args:
             unit (UnitNames): The unit to return the value in.
             
         Returns:
-            float: The value of the axis in the specified unit.
+            int: The value of the axis in the specified unit.
         """
         if self._unit == unit:
             return self._value
@@ -105,11 +105,11 @@ class Axis:
         else:
             raise ValueError(f"Invalid unit: {unit}")
 
-    def _get_char_value(self) -> float:
+    def _get_char_value(self) -> int:
         """Return the value of the axis in terms of characters.
 
         Returns:
-            float: The value of the axis in terms of characters.
+            int: The value of the axis in terms of characters.
         """
         if self._unit == UnitNames.CHAR:
             return self._value
@@ -118,11 +118,11 @@ class Axis:
         else:
             raise ValueError(f"Invalid unit: {self._unit}")
 
-    def _get_percent_value(self) -> float:
+    def _get_percent_value(self) -> int:
         """Return the value of the axis in terms of a percentage of the given screen size.
 
         Returns:
-            float: The value of the axis in terms of percentage of the given screen size.
+            int: The value of the axis in terms of percentage of the given screen size.
         """
         if self._unit == UnitNames.PERCENT:
             return self._value
@@ -181,11 +181,11 @@ class Axis:
 
     def __truediv__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:
-            return Axis(self._value / other._value, self._unit, self._axis_size)
+            return Axis(int(self._value / other._value), self._unit, self._axis_size)
         elif self._unit == UnitNames.CHAR:
-            return Axis(self._value / other._char_value, self._unit, self._axis_size)
+            return Axis(int(self._value / other._char_value), self._unit, self._axis_size)
         else:
-            return Axis(self._value / other._percent_value, self._unit, self._axis_size)
+            return Axis(int(self._value / other._percent_value), self._unit, self._axis_size)
 
     def __floordiv__(self, other: 'Axis') -> 'Axis':
         if self._unit == other._unit:

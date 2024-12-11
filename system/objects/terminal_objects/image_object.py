@@ -40,18 +40,21 @@ class ImageObject(BaseObject):
         self.grid.overlay(self._image)
         self.should_draw = True
 
-    def update(self, input_handler: InputHandler) -> None:
+    def update(self, input_handler: InputHandler) -> bool:
         """Update the object based on the inputs from the input handler.
 
         Args:
             input_handler (InputHandler):
                 The input handler.
+
+        Returns:
+            bool: Whether the object should be drawn.
         """
         # This should be called first in this method in any child classes of BaseObject.
-        super().update(input_handler)
+        self.should_draw = super().update(input_handler) or self.should_draw
 
         # Update the image animation and draw it if it has changed.
         if self._image.update_animation():
             self._draw_image()
 
-
+        return self.should_draw

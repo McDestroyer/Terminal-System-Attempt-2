@@ -7,6 +7,7 @@ import system.utilities.cursor as cursor
 import system.objects.helper_objects.pixel_objects.pixel_grid as pixel_grid
 import system.objects.helper_objects.coordinate_objects.coordinate as coord
 import system.objects.helper_objects.coordinate_objects.axis as ax
+from system.objects.helper_objects.coordinate_objects.point import Point
 
 
 class Display:
@@ -44,7 +45,7 @@ class Display:
 
     def refresh_display(self) -> None:
         """Refresh the display with the most recent display string. Fast, but may cause flashing."""
-        cursor.clear_screen()
+        # cursor.clear_screen()
 
         self._display_string = self._display_pixel_grid.to_string()
         print(self._display_string, end="", flush=True)
@@ -55,8 +56,8 @@ class Display:
         """Refresh the display with the most recent display string, only updating the parts that are different. Slower,
         but prevents flashing."""
         # Skip if there have been no changes.
-        if self._display_pixel_grid == self._previous_pixel_grid:
-            return
+        # if self._display_pixel_grid == self._previous_pixel_grid:
+        #     return
 
         # If the previous display array is a different size than the current one, clear the screen and print the whole
         # thing. Usually should only occur when changing display sizes.
@@ -64,32 +65,27 @@ class Display:
             self.refresh_display()
             return
 
-        if len(self._display_pixel_grid.grid) != len(self._previous_pixel_grid.grid):
-            print("Display size mismatch.")
-            return
+        # if len(self._display_pixel_grid.grid) != len(self._previous_pixel_grid.grid):
+        #     print("Display size mismatch.")
+        #     return
 
         # Cycle through the display array and print the characters that have changed.
         for y, row in enumerate(self._display_pixel_grid.grid):
-            for x, pixel in enumerate(row):
-                try:
-                    if pixel != self._previous_pixel_grid.grid[y][x]:
-                        # Possibly inefficient, printing separately to jump each time, but it works.
-                        # TODO: Optimize this. Maybe use a string buffer and only print when a pixel isn't the same as
-                        #  the previous one.
-                        cursor.set_pos(x, y)
-                        print(pixel.printable_str, end="", flush=False)
-                except IndexError:
-                    print(f"Index error at {x}, {y}")
-                    print(f"Display size: {self._display_pixel_grid.size}")
-                    print(f"Previous display size: {self._previous_pixel_grid.size}")
-                    print(f"Display grid length: {len(self._display_pixel_grid.grid)}")
-                    print(f"Previous display grid length: {len(self._previous_pixel_grid.grid)}")
-                    print(f"Display grid x length: {len(self._display_pixel_grid.grid[0])}")
-                    print(f"Previous display grid x length: {len(self._previous_pixel_grid.grid[0])}")
-                    print(f"Row length: {len(row)}")
-                    print(f"Pixel: {pixel}")
 
-                    sys.exit(1)
+            string_buffer = ""
+            buffer_start: Point | None = None
+
+            for x, pixel in enumerate(row):
+                if pixel != self._previous_pixel_grid.grid[y][x]:
+                    if buffer_start is None:
+                        buffer_start = Point(x, y)
+                    string_buffer += pixel.printable_str
+                elif buffer_start is not None:
+                    cursor.set_pos(buffer_start.y, buffer_start.x)
+                    print(string_buffer, end="", flush=False)
+
+                    string_buffer = ""
+                    buffer_start = None
 
         # Finish by resetting the cursor to the top left and flushing the print queue.
         cursor.set_pos(0, 0)
@@ -97,6 +93,18 @@ class Display:
 
         # Update the previous display grid.
         self._previous_pixel_grid = deepcopy(self._display_pixel_grid)
+
+    def update_display_grid(self, new_display_grid: pixel_grid.PixelGrid) -> None:
+        """Update the display grid.
+
+        Args:
+            new_display_grid (pixel_grid.PixelGrid):
+                The new display grid.
+        """
+        # if new_display_grid != self._display_pixel_grid:
+            # self._display_pixel_grid = deepcopy(new_display_grid)
+        self._display_pixel_grid = new_display_grid
+        self.anti_flash_refresh_display()
 
     @property
     def display_array(self) -> pixel_grid.PixelGrid:

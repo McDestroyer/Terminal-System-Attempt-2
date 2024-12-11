@@ -3,13 +3,13 @@ from system.objects.helper_objects.pixel_objects.pixel_theme import ThemeDict
 
 class FormattedText:
     """A class to hold a list of strings and their themes. Allows for text to have different themes in a single line."""
-    def __init__(self, text_list: list[list[str, ThemeDict]] = None, center_text_horizontally: bool = False,
+    def __init__(self, text_list: list[tuple[str, ThemeDict]] = None, center_text_horizontally: bool = False,
                  center_text_vertically: bool = False, wrap_words: bool = True,
-                 cutoff_ending: list[list[str, ThemeDict]] = None) -> None:
+                 cutoff_ending: list[tuple[str, ThemeDict]] = None) -> None:
         """Initialize the class.
 
         Args:
-            text_list (list[list[str, ThemeDict]], optional):
+            text_list (list[tuple[str, ThemeDict]], optional):
                 The list of text chunks and their themes. All text chunks will be concatenated together with no spaces.
                 Defaults to [["", ThemeDict()]].
             center_text_horizontally (bool, optional):  # TODO: Implement this
@@ -21,7 +21,7 @@ class FormattedText:
             wrap_words (bool, optional):
                 Whether to wrap words to the next line if they are too long.
                 Defaults to True.
-            cutoff_ending (list[list[str, ThemeDict]], optional):
+            cutoff_ending (list[tuple[str, ThemeDict]], optional):
                 The text to cut off the end of the text with if it is too long. Should not include color codes because
                 I couldn't be bothered to make that work. Should not include newlines because this will only show if the
                 text ran out of lines and that would be stupid. Warning: If the text is too long, it may scroll off the
@@ -46,10 +46,10 @@ class FormattedText:
     def __len__(self) -> int:
         return len(self._text_list)
 
-    def __getitem__(self, index: int) -> list[str, ThemeDict]:
+    def __getitem__(self, index: int) -> tuple[str, ThemeDict]:
         return self._text_list[index]
 
-    def __setitem__(self, index: int, value: list[str, ThemeDict]) -> None:
+    def __setitem__(self, index: int, value: tuple[str, ThemeDict]) -> None:
         self._text_list[index] = value
 
     def __delitem__(self, index: int) -> None:

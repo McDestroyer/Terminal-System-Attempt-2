@@ -3,17 +3,18 @@ import copy
 from system.objects.helper_objects.formatted_text import FormattedText
 from system.objects.helper_objects.pixel_objects.pixel import Pixel
 from system.objects.helper_objects.pixel_objects.pixel_grid import PixelGrid
-from system.objects.helper_objects.coordinate_objects import coordinate as coord
-from system.objects.helper_objects.pixel_objects import pixel_theme as theme, pixel
+from system.objects.helper_objects.coordinate_objects.coordinate import Coordinate
+from system.objects.helper_objects.pixel_objects.pixel_theme import ThemeDict
+
 from system.utilities.color import Colors, Color
 
 
 class Text(PixelGrid):
     """A class for displaying text on the terminal."""
 
-    def __init__(self, coordinates: coord.Coordinate, size: coord.Coordinate, text: FormattedText = FormattedText(),
-                 default_pixel: pixel.Pixel = pixel.Pixel(),
-                 overall_themes: theme.ThemeDict = theme.ThemeDict()) -> None:
+    def __init__(self, coordinates: Coordinate, size: Coordinate, text: FormattedText = FormattedText(),
+                 default_pixel: Pixel = Pixel(),
+                 overall_themes: ThemeDict = ThemeDict()) -> None:
         """Initialize the PixelGrid object.
 
         Args:
@@ -39,13 +40,83 @@ class Text(PixelGrid):
 
         self.grid = self._get_text_pixel_grid_word_wrap() if self._text.wrap_words else self._get_text_pixel_grid()
 
-    def update_text(self) -> None:
-        """Update the text."""
-        self._text_pixels = self._get_text_pixel_list()
+        self.should_draw = True
 
-        self.grid = self._get_text_pixel_grid_word_wrap() if self._text.wrap_words else self._get_text_pixel_grid()
+    @PixelGrid.size.setter
+    def size(self, new_size: Coordinate) -> None:
+        """Set the size of the PixelGrid.
 
-    def _get_text_pixel_list(self) -> list[pixel.Pixel]:
+        Args:
+            new_size (Coordinate):
+                The new size of the PixelGrid.
+        """
+        self._size = new_size
+
+        self._grid = [[self._default_pixel for _ in range(new_size.x_char)] for _ in range(new_size.y_char)]
+
+        self.should_draw = True
+
+    @PixelGrid.overall_themes.setter
+    def overall_themes(self, new_overall_themes: ThemeDict) -> None:
+        """Set the overall themes of the PixelGrid.
+
+        Args:
+            new_overall_themes (ThemeDict):
+                The new overall themes of the PixelGrid.
+        """
+        self._overall_themes = new_overall_themes
+
+        # Set the themes of the pixels.
+        for row in self._grid:
+            for pix in row:
+                pix.themes = copy.deepcopy(self._overall_themes)
+
+        self.should_draw = True
+
+    @property
+    def text(self) -> FormattedText:
+        """Return the text.
+
+        Returns:
+            FormattedText: The text.
+        """
+        return self._text
+
+    @text.setter
+    def text(self, new_text: FormattedText) -> None:
+        """Set the text.
+
+        Args:
+            new_text (FormattedText):
+                The new text.
+        """
+        self._text = new_text
+        self.should_draw = True
+
+    def update_text(self) -> bool:
+        """Update the text grid and pixel list.
+
+        Returns:
+            bool: Whether the text was updated and should be redrawn.
+        """
+        if self.should_draw:
+            self.should_draw = False
+
+            pixel_list = self._get_text_pixel_list()
+
+            if self._text_pixels != pixel_list:
+                self._text_pixels = pixel_list
+
+                if self._text.wrap_words:
+                    self.grid = self._get_text_pixel_grid_word_wrap()
+                else:
+                    self.grid = self._get_text_pixel_grid()
+
+            return True
+
+        return False
+
+    def _get_text_pixel_list(self) -> list[Pixel]:
         """Get the pixels for the text.
 
         Returns:
@@ -65,7 +136,7 @@ class Text(PixelGrid):
 
         return text_pixels
 
-    def _get_text_pixel_grid_word_wrap(self) -> list[list[pixel.Pixel]]:
+    def _get_text_pixel_grid_word_wrap(self) -> list[list[Pixel]]:
         """Get the pixels for the text.
 
         Returns:
@@ -75,7 +146,7 @@ class Text(PixelGrid):
 
         # TODO: MAke this into a function by itself.
         # Create the 2D list of text pixels, splitting the text into rows and pulling out escape characters.
-        text_pixel_grid = []
+        text_pixel_grid = [[]]
         word: list[Pixel] = []
         word_breakers: list[str] = ["\n", "\033", " ", "-", ":", ";", ",", ".", ">", "<", "/", "\\", "|", "=", "+", "*"]
 
@@ -161,7 +232,7 @@ class Text(PixelGrid):
 
         return text_pixel_grid
 
-    def _get_text_pixel_grid(self) -> list[list[pixel.Pixel]]:
+    def _get_text_pixel_grid(self) -> list[list[Pixel]]:
         """Get the pixels for the text.
 
         Returns:
@@ -169,9 +240,8 @@ class Text(PixelGrid):
         """
         text_pixels = self._get_text_pixel_list()
 
-        # TODO: MAke this into a function by itself.
         # Create the 2D list of text pixels, splitting the text into rows and pulling out escape characters.
-        text_pixel_grid = []
+        text_pixel_grid = [[]]
 
         color_list: list[Color] = []
         color_string: str = ""
@@ -211,7 +281,12 @@ class Text(PixelGrid):
             # Finally, check to see if there are too many rows and add the cut off the text if so.
             if len(text_pixel_grid) > self._size.y_char:
                 text_pixel_grid = text_pixel_grid[:self._size.y_char]
-                text_pixel_grid[-1] = text_pixel_grid[-1][:max(self._size.x_char + len(self._text.cutoff_ending[0]), 0)]
+                try:
+                    text_pixel_grid[-1] = text_pixel_grid[-1][
+                        :max(self._size.x_char + len(self._text.cutoff_ending[0]), 0)
+                    ]
+                except IndexError:
+                    pass
 
                 # Convert the cutoff ending to pixels and add it to the end of the row.
                 for i in range(len(self._text.cutoff_ending[:self._size.x_char])):

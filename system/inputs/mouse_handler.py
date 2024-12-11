@@ -2,9 +2,11 @@ import os
 import time
 
 import mouse
+import pygetwindow
 from pynput import mouse as mouse_suppressor
-# import win32gui  # TODO: Find a way to make this work on python 3.13 and above.
-import pywinctl
+# import win32gui  # TODO: Find a way to make this work on python 3.13 and above or the the editor.
+# from pywinctl import Window, getWindowsWithTitle, getActiveWindow
+from pygetwindow import Window, getWindowsWithTitle, getActiveWindowTitle
 
 from system.inputs.generic_input import GenericInput
 import system.inputs.button as button
@@ -22,7 +24,7 @@ class MouseHandler(GenericInput):
         GenericInput
 
     Properties:
-        position (tuple[int, int]): The position of the mouse.
+        position (Point): The position of the mouse.
 
     Methods:
         get_left_click: Get the state of the left click.
@@ -57,7 +59,7 @@ class MouseHandler(GenericInput):
         self._wheel_delta = 0
         self._wheel_position = 0
 
-        self._absolute_position = (0, 0)
+        self._absolute_position = Point(0, 0)
         self._mouse_char_position = coord.Coordinate(
             axis.Axis(0, axis_size=self._screen_size.x_char),
             axis.Axis(0, axis_size=self._screen_size.y_char)
@@ -89,12 +91,12 @@ class MouseHandler(GenericInput):
         self.listener.start()
 
     @property
-    def position(self) -> tuple[int, int]:
+    def position(self) -> Point:
         return self._absolute_position
 
     @position.setter
-    def position(self, value: tuple[int, int]):
-        mouse.move(value[0], value[1])
+    def position(self, value: Point):
+        mouse.move(value.x, value.y)
         self._absolute_position = value
 
     def get_left_click(self) -> bool:
@@ -106,15 +108,18 @@ class MouseHandler(GenericInput):
         Returns:
             bool: Whether the window is focused or not.
         """
-        return self._window == pywinctl.getActiveWindow()
+        return self._window.title == pygetwindow.getActiveWindowTitle()
 
-    def _get_mouse_relative_position(self) -> tuple[int, int]:
+    def _get_mouse_relative_position(self) -> Point:
         """Get the mouse position relative to the window.
 
         Returns:
-            tuple[int, int]: The mouse position relative to the window.
+            Point: The mouse position relative to the window.
         """
-        return self._absolute_position[0] - self._window_rect.left, self._absolute_position[1] - self._window_rect.top
+        return Point(
+            self._absolute_position.x - self._window_rect.left,
+            self._absolute_position.y - self._window_rect.top
+        )
 
     def _get_mouse_char_position(self) -> coord.Coordinate:
         """Get the mouse position in characters.
@@ -153,7 +158,7 @@ class MouseHandler(GenericInput):
             self._suppress_mouse = True
             self._is_focused = True
             self._update_window_rect()
-            self._absolute_position = mouse.get_position()
+            self._absolute_position = Point(mouse.get_position())
 
             # Update the mouse inputs
             self._inputs = {
@@ -191,11 +196,11 @@ class MouseHandler(GenericInput):
         """
         return self._inputs
 
-    def _get_window(self) -> pywinctl.Window | None:
+    def _get_window(self) -> Window | None:
         """Get the window object.
 
         Returns:
-            pywinctl.Window: The window object.
+            Window: The window object.
             None: If the program is running in the editor.
         """
         # If the program is running in the editor, return None because the window will not be found.
@@ -203,7 +208,7 @@ class MouseHandler(GenericInput):
             return None
 
         # Get the windows with the name given.
-        window_list = pywinctl.getWindowsWithTitle(self._window_name)
+        window_list = getWindowsWithTitle(self._window_name)
 
         # If there are no windows with the name, set the title of the window to the name.
         if len(window_list) == 0:
@@ -215,14 +220,14 @@ class MouseHandler(GenericInput):
             window_name_mod = 1
             while len(window_list) > 0:
                 window_name_mod += 1
-                window_list = pywinctl.getWindowsWithTitle(self._window_name + str(window_name_mod))
+                window_list = getWindowsWithTitle(self._window_name + str(window_name_mod))
 
             # Set the window name to the new name.
             self._window_name = self._window_name + " " + str(window_name_mod)
             os.system("title " + self._window_name)
 
         # Get the window itself.
-        window_list = pywinctl.getWindowsWithTitle(self._window_name)
+        window_list = getWindowsWithTitle(self._window_name)
 
         return window_list[0]
 
@@ -234,10 +239,10 @@ class MouseHandler(GenericInput):
 
         # Update the window rect and offset the edges to account for the window border and scroll bars.
         self._window_rect.set_bounds(
-            left=self._window.rect.left + self._window_rect_offsets.left,
-            top=self._window.rect.top + self._window_rect_offsets.top,
-            right=self._window.rect.right + self._window_rect_offsets.right,
-            bottom=self._window.rect.bottom + self._window_rect_offsets.bottom,
+            left=self._window.left + self._window_rect_offsets.left,
+            top=self._window.top + self._window_rect_offsets.top,
+            right=self._window.right + self._window_rect_offsets.right,
+            bottom=self._window.bottom + self._window_rect_offsets.bottom,
         )
 
     def _win32_event_filter(self, msg, _) -> bool:

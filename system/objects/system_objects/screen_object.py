@@ -61,14 +61,23 @@ class Screen:
         self._handle_mouse(input_handler)
 
         for obj in self.terminal_objects:
-            obj.update(input_handler)
-            if obj.should_draw:
+            if obj.update(input_handler):
                 self.should_draw = True
 
-    def draw(self) -> None:
+    def draw(self) -> PixelGrid:
         """Update the screen grid if needed."""
         if self.should_draw:
-            self._refresh()
+            self.screen_grid.clear()
+
+            for obj in self.terminal_objects:
+                self.screen_grid.overlay(obj.draw())
+
+            if self.mouse is not None:
+                self.screen_grid.overlay(self.mouse.grid)
+
+            self.should_draw = False
+
+        return self.screen_grid
 
     def add_object(self, obj: BaseObject) -> None:
         """Add an object to the screen.
@@ -134,6 +143,7 @@ class Screen:
             if obj.grid.coordinates.char_y <= coordinates[0] < obj.grid.coordinates.char_y + obj.grid.height:
                 if obj.grid.coordinates.char_x <= coordinates[1] < obj.grid.coordinates.char_x + obj.grid.width:
                     return obj
+
         return None
 
     def get_object_by_name(self, name: str) -> BaseObject | None:
@@ -151,12 +161,3 @@ class Screen:
             if obj.name == name:
                 return obj
         return None
-
-    def _refresh(self) -> None:
-        """Refresh the grid."""
-        self.screen_grid.clear()
-        for obj in self.terminal_objects:
-            self.screen_grid.overlay(obj.grid)
-            obj.should_draw = False
-        self.should_draw = False
-

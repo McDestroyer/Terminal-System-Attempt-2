@@ -1,26 +1,27 @@
 from system.inputs.input_handler import InputHandler
-from system.objects.helper_objects.coordinate_objects import axis
+
+from system.objects.helper_objects.coordinate_objects.axis import Axis
 from system.objects.helper_objects.coordinate_objects.coordinate import Coordinate
-from system.objects.helper_objects.pixel_objects import pixel_grid
 from system.objects.helper_objects.ascii_image import Image
 from system.objects.helper_objects.pixel_objects.pixel_grid import PixelGrid
-from system.objects.system_objects import display
+
 from system.objects.system_objects.display import Display
 from system.objects.system_objects.screen_object import Screen
+
 from system.objects.terminal_objects.cursor_object import CursorObject
 
 
 class DisplayManager:
-    def __init__(self, display_grid: pixel_grid.PixelGrid) -> None:
+    def __init__(self, display_grid: PixelGrid) -> None:
         """Initialize an instance of the DisplayManager (formerly WindowManager) class.
 
         Args:
-            display_grid (pixel_grid.PixelGrid):
+            display_grid (PixelGrid):
                 The basic grid defining the display.
         """
         self._display_grid = display_grid
 
-        self._display: Display = display.Display(self._display_grid)
+        self._display: Display = Display(self._display_grid)
         self._screens: dict[str, Screen] = {}
         self._current_screen: Screen | None = None
 
@@ -48,8 +49,8 @@ class DisplayManager:
         if not isinstance(cursor_image, Image):
             cursor_image = Image(
                 Coordinate(
-                    axis.Axis(0, axis_size=self._display_grid.screen_size.x),
-                    axis.Axis(0, axis_size=self._display_grid.screen_size.y)
+                    Axis(0, axis_size=self._display_grid.screen_size.x),
+                    Axis(0, axis_size=self._display_grid.screen_size.y)
                 ),
                 cursor_image
             )
@@ -61,7 +62,8 @@ class DisplayManager:
         """Refresh the screen."""
         if self._current_screen is not None:
             self._current_screen.draw()
-        self._display.anti_flash_refresh_display()
+
+            self._display.update_display_grid(self._current_screen.screen_grid)
 
     def update(self, input_handler: InputHandler) -> None:
         """Update the screen and all of its objects.

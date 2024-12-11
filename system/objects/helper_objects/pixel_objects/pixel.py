@@ -38,10 +38,10 @@ class Pixel:
         self._printable_str = f"{self._themes}{self._char}{Colors.END}"
 
     def __str__(self):
-        return self.printable_str
+        return self._printable_str
 
     def __repr__(self):
-        return self.printable_str
+        return self._printable_str
 
     @property
     def char(self) -> str:
@@ -53,7 +53,7 @@ class Pixel:
 
     @property
     def printable_str(self) -> str:
-        return f"{self._themes}{self._char}{Colors.END}"
+        return self._printable_str
 
     @char.setter
     def char(self, new_char: str) -> None:
@@ -87,8 +87,11 @@ class Pixel:
         self._themes.current_theme_type = theme
         self._printable_str = f"{self._themes}{self._char}{Colors.END}"
 
+    def __call__(self, *args, **kwargs):
+        return f"{self._themes}{self._char}{Colors.END}"
+
     def __eq__(self, other: 'Pixel') -> bool:
-        return self.char == other.char and self.themes == other.themes
+        return self._printable_str == other._printable_str
 
     def __ne__(self, other: 'Pixel') -> bool:
         return not self == other

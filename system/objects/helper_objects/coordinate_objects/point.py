@@ -3,9 +3,22 @@ import copy
 
 class Point:
 
-    def __init__(self, x: int = 0, y: int = 0):
-        self.x = x
-        self.y = y
+    def __init__(self, x: int | tuple = 0, y: int = 0):
+        """Initialize the point.
+
+        Args:
+            x (int | tuple, optional):
+                The x coordinate of the point or a tuple containing both coordinates.
+                Defaults to 0.
+            y (int, optional):
+                The y coordinate of the point.
+                Defaults to 0.
+        """
+        if isinstance(x, tuple):
+            self.x, self.y = x
+        else:
+            self.x = x
+            self.y = y
 
     @property
     def amplitude(self):
@@ -82,7 +95,7 @@ class Point:
         if not isinstance(other, Point):
             raise TypeError(f"unsupported operand type(s) for /: 'Point' and '{type(other)}'")
 
-        return Point(self.x / other.x, self.y / other.y)
+        return Point(int(self.x / other.x), int(self.y / other.y))
 
     def __floordiv__(self, other):
         if not isinstance(other, Point):

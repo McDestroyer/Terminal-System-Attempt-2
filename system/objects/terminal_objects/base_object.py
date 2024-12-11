@@ -58,7 +58,7 @@ class BaseObject:
     def mouse_over(self, value: Point | None):
         self._mouse_over = value
 
-    def update(self, input_handler: InputHandler) -> None:
+    def update(self, input_handler: InputHandler) -> bool:
         """Update the object based on the inputs from the input handler.
 
         Args:
@@ -68,7 +68,7 @@ class BaseObject:
         # TODO: Update mouse_over from outside the class when the mouse is moved. We can't do it here because of the
         #       idea of pixel grids containing other pixel grids causing the loss of the absolute position of the
         #       object.
-        pass
+        return self.should_draw
 
     def move(self, new_position: coord.Coordinate) -> None:
         """Move the object to the new position.
@@ -89,6 +89,15 @@ class BaseObject:
         """
         self.grid.size = new_size
         self.should_draw = True
+
+    def draw(self) -> pixel_grid.PixelGrid:
+        """Return the grid of the object and set should_draw to False.
+
+        Returns:
+            PixelGrid: The grid of the object.
+        """
+        self.should_draw = False
+        return self.grid
 
     def __str__(self):
         return f"{self.name} is {self.description} at {self.grid.coordinates} with size {self.grid.size}."

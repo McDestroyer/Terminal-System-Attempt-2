@@ -1,15 +1,20 @@
+import copy
 import os
 import time
 
 from system.inputs.button import Button
 from system.inputs.generic_input import GenericInput
 from system.inputs.input_handler import InputHandler
-import system.utilities.class_tools as tools
-from system.objects.helper_objects.coordinate_objects import coordinate as coord, axis
+
+from system.utilities.class_tools import RateLimiter
+
+from system.objects.helper_objects.coordinate_objects.coordinate import Coordinate
 from system.objects.helper_objects.coordinate_objects.axis import Axis
 from system.objects.helper_objects.coordinate_objects.point import Point
-from system.objects.helper_objects.pixel_objects import pixel_grid
+from system.objects.helper_objects.pixel_objects.pixel_grid import PixelGrid
+
 from system.objects.system_objects.display_manager import DisplayManager
+
 from system.utilities import cursor
 from system.utilities.color import Colors
 
@@ -49,18 +54,18 @@ class TerminalSystem:
         self._in_editor = in_editor
 
         self.run: bool = True
-        self._rate_limiter = tools.RateLimiter(self.desired_fps)
+        self._rate_limiter = RateLimiter(self.desired_fps)
 
         self.input_handler = InputHandler(self._name)
 
         screen_size = self._calibrate_screen_size()
 
-        self._initial_pixel_grid = pixel_grid.PixelGrid(
-            coordinates=coord.Coordinate(
+        self._initial_pixel_grid = PixelGrid(
+            coordinates=Coordinate(
                 Axis(axis_size=screen_size.x),
                 Axis(axis_size=screen_size.y)
             ),
-            size=coord.Coordinate(
+            size=Coordinate(
                 Axis(value=screen_size.x, axis_size=screen_size.x),
                 Axis(value=screen_size.y, axis_size=screen_size.y)
             )
@@ -69,6 +74,8 @@ class TerminalSystem:
         self.display_manager = DisplayManager(self._initial_pixel_grid)
 
         self._inputs: dict[GenericInput, dict[str, Button | Axis | int | Point]] = {}
+
+        cursor.hide()
 
     def update(self) -> None:
         """Update the terminal objects and get inputs."""
@@ -80,10 +87,11 @@ class TerminalSystem:
     def refresh_screen(self) -> None:
         """Print the terminal objects to the terminal."""
         self.display_manager.refresh_screen()
-        self._rate_limiter()
+        # self._rate_limiter()
 
     def shutdown(self) -> None:
         """Stop the terminal system."""
+        cursor.show()
         pass
 
     def _calibrate_screen_size(self) -> Point:
@@ -159,11 +167,11 @@ class TerminalSystem:
         return self._name
 
     @property
-    def minimum_screen_size(self) -> tuple[int, int]:
+    def minimum_screen_size(self) -> Point:
         """Return the minimum screen size.
 
         Returns:
-            tuple[int, int]: The minimum screen size.
+            Point: The minimum screen size.
         """
         return self._minimum_screen_size
 
@@ -227,11 +235,11 @@ class TerminalSystem:
     #     self.input_handler.mouse._window_name = new_name
 
     # @minimum_screen_size.setter
-    # def minimum_screen_size(self, new_minimum_screen_size: tuple[int, int]) -> None:
+    # def minimum_screen_size(self, new_minimum_screen_size: Point) -> None:
     #     """Set the minimum screen size.
     #
     #     Args:
-    #         new_minimum_screen_size (tuple[int, int]):
+    #         new_minimum_screen_size (Point):
     #             The new minimum screen size.
     #     """
     #     self._minimum_screen_size = new_minimum_screen_size
@@ -258,6 +266,15 @@ class TerminalSystem:
         self._mouse_enabled = new_mouse_enabled
         self.input_handler.mouse.enabled = self._mouse_enabled
         # TODO: Implement this.
+
+    @property
+    def initial_pixel_grid(self) -> PixelGrid:
+        """Return the initial pixel grid.
+
+        Returns:
+            PixelGrid: The initial pixel grid.
+        """
+        return copy.deepcopy(self._initial_pixel_grid)
 
     # This should never be modified by the user after being set.
     # @in_editor.setter

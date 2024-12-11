@@ -52,8 +52,8 @@ class Coordinate:
         """
         self._screen_size = new_screen_size
 
-        self._x_axis.screen_size = new_screen_size
-        self._y_axis.screen_size = new_screen_size
+        self._x_axis.screen_size = new_screen_size.x
+        self._y_axis.screen_size = new_screen_size.y
 
     @property
     def x_axis(self) -> axis.Axis:

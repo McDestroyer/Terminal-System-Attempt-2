@@ -3,6 +3,7 @@ import copy
 import system.objects.helper_objects.pixel_objects.pixel as pixel
 import system.objects.helper_objects.coordinate_objects.coordinate as coord
 import system.objects.helper_objects.pixel_objects.pixel_theme as theme
+from system.objects.helper_objects.coordinate_objects.axis import Axis, UnitNames
 from system.objects.helper_objects.coordinate_objects.point import Point
 
 
@@ -218,10 +219,15 @@ class PixelGrid:
             new_grid (list[list[Pixel]]):
                 The new grid of the PixelGrid.
         """
-        self._grid = new_grid
+        self._grid = copy.deepcopy(new_grid)
 
-        self._size.x_char = len(new_grid[0])
-        self._size.y_char = len(new_grid)
+        x_char = len(new_grid[0]) if new_grid else 0
+        y_char = len(new_grid) if new_grid else 0
+
+        self._size = coord.Coordinate(
+            Axis(x_char, UnitNames.CHAR, self._size.screen_size.x),
+            Axis(y_char, UnitNames.CHAR, self._size.screen_size.y),
+        )
 
     def change_overall_theme(self, theme_name: theme.ThemeTypes) -> None:
         """Set the theme of all the pixels in the PixelGrid.
@@ -355,7 +361,7 @@ class PixelGrid:
             bool: Whether the overlay changed anything.
         """
         # Update the other's size's screen size to match the size of this PixelGrid.
-        other.size.screen_size = (self.size.x_char, self.size.y_char)
+        other.size.screen_size = Point(self.size.x_char, self.size.y_char)
 
         # Prep a variable to return whether anything changed.
         something_changed = False
@@ -365,7 +371,7 @@ class PixelGrid:
 
         # Overlay the other PixelGrid onto this PixelGrid.
         for y, row in enumerate(other._grid):
-            for x, pix in row:
+            for x, pix in enumerate(row):
                 # Skip the pixel if it'd be out of bounds.
                 if y + offset.y_char < 0 or x + offset.x_char < 0:
                     continue
@@ -373,8 +379,8 @@ class PixelGrid:
                     continue
 
                 # Check if the pixel is different.
-                if str(self._grid[y + offset.y_char][x + offset.x_char]) != str(pix):
-                    something_changed = True
+                # if str(self._grid[y + offset.y_char][x + offset.x_char]) != str(pix):
+                #     something_changed = True
 
                 # Overlay the pixel.
                 self._grid[y + offset.y_char][x + offset.x_char] = pix

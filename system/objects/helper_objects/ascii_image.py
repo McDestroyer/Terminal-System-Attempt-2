@@ -30,12 +30,12 @@ class Image(pixel_grid.PixelGrid):
             Check if the frame should be updated and update it if necessary.
     """
 
-    def __init__(self, position: coord.Coordinate,
+    def __init__(self, coordinates: coord.Coordinate,
                  image_frames: list[list[list[pixel.Pixel]]] | str | list[pixel_grid.PixelGrid]) -> None:
         """Initialize the Image object.
 
         Args:
-            position (coord.Coordinate):
+            coordinates (coord.Coordinate):
                 The position of the image.
             image_frames (list[list[list[pixel.Pixel]]] | str | pixel_grid.PixelGrid):
                 The image frames to display. If a string is passed, it will be assumed to be a path to an image file.
@@ -61,12 +61,12 @@ class Image(pixel_grid.PixelGrid):
 
         # Get the size of the first frame to set the size of the image.
         size = coord.Coordinate(
-            axis.Axis(len(self._frames[0][0]), axis_size=position.screen_size[0]),
-            axis.Axis(len(self._frames[0]), axis_size=position.screen_size[1]),
+            axis.Axis(len(self._frames[0][0]), axis_size=coordinates.screen_size[0]),
+            axis.Axis(len(self._frames[0]), axis_size=coordinates.screen_size[1]),
         )
 
         # Initialize the PixelGrid object with the coordinates, size, and grid of the image.
-        super().__init__(position, size)
+        super().__init__(coordinates, size)
 
         # Set the grid to the first frame.
         self.grid = self._frames[self._current_frame]
@@ -102,7 +102,7 @@ class Image(pixel_grid.PixelGrid):
         return self._given_image_frames
 
     @pixel_grid.PixelGrid.size.setter
-    def _size(self, new_size: coord.Coordinate) -> None:
+    def size(self, new_size: coord.Coordinate) -> None:
         """Set the size of the image.
 
         Args:
@@ -378,6 +378,6 @@ if __name__ == "__main__":
         cursor.set_pos()
         cursor.clear_screen()
         img.update_animation()
-        print(img.to_string())
+        print(img)
         # print("\n----------\n")
-        time.sleep(.5)
+        time.sleep(.02)
