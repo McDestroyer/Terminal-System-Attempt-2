@@ -1,9 +1,11 @@
 import os
 import time
 
+import subprocess
+import socket
+
 import mouse
-import pygetwindow
-from pynput import mouse as mouse_suppressor
+# from pynput import mouse as mouse_suppressor
 # import win32gui  # TODO: Find a way to make this work on python 3.13 and above or the the editor.
 # from pywinctl import Window, getWindowsWithTitle, getActiveWindow
 from pygetwindow import Window, getWindowsWithTitle, getActiveWindowTitle
@@ -87,8 +89,38 @@ class MouseHandler(GenericInput):
 
         # Suppress the mouse.
         self._suppress_mouse = False
-        self.listener = mouse_suppressor.Listener(win32_event_filter=self._win32_event_filter)
-        self.listener.start()
+        self._was_suppressed = False
+        # self.listener = mouse_suppressor.Listener(win32_event_filter=self._win32_event_filter)
+        # self.listener.start()
+
+        # Start the mouse listener in a different Python version
+        path = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(path, 'prototype_mouse_blocker.py')
+        self._suppressor_process = subprocess.Popen(
+            args=['python', path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        # time.sleep(1)
+        # Create a persistent socket connection
+        self._suppressor_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._suppressor_connection.connect(('localhost', 65432))
+
+    def send_command(self, cmd: str) -> None:
+        """Send a command to the mouse suppressor.
+
+        Args:
+            cmd (str): The command to send.
+        """
+        self._suppressor_connection.sendall(cmd.encode())
+
+    def receive_response(self) -> str:
+        """Receive a response from the mouse suppressor.
+
+        Returns:
+            str: The response.
+        """
+        return self._suppressor_connection.recv(1024).decode()
 
     @property
     def position(self) -> Point:
@@ -108,7 +140,7 @@ class MouseHandler(GenericInput):
         Returns:
             bool: Whether the window is focused or not.
         """
-        return self._window.title == pygetwindow.getActiveWindowTitle()
+        return self._window.title == getActiveWindowTitle()
 
     def _get_mouse_relative_position(self) -> Point:
         """Get the mouse position relative to the window.
@@ -188,6 +220,32 @@ class MouseHandler(GenericInput):
             # Reset the wheel delta after the inputs have been updated.
             self._wheel_delta = 0
 
+        self._update_suppressor()
+
+    def _update_suppressor(self) -> None:
+        """Update the mouse suppressor."""
+        if self._suppress_mouse and not self._was_suppressed:
+            self.send_command("start")
+        elif not self._suppress_mouse and self._was_suppressed:
+            self.send_command("stop")
+        self._was_suppressed = self._suppress_mouse
+
+        self.send_command("update_window_rect: " + str(self._window_rect.left) + " " + str(self._window_rect.top) + " "
+                          + str(self._window_rect.right) + " " + str(self._window_rect.bottom))
+        self.send_command("update_mouse_position: " + str(self._absolute_position.x) + " " +
+                          str(self._absolute_position.y))
+
+        response = self.receive_response().lower().strip()
+        if response.startswith("mouse_clicked"):
+            if response.endswith("true"):
+                self._is_clicked = True
+            elif response.endswith("false"):
+                self._is_clicked = False
+            else:
+                raise ValueError("Unexpected response from mouse suppressor.")
+        else:
+            raise ValueError("Unexpected response from mouse suppressor.")
+
     def get_inputs(self) -> dict[str, button.Button | int | Point]:
         """Get the input dictionary.
 
@@ -245,32 +303,45 @@ class MouseHandler(GenericInput):
             bottom=self._window.bottom + self._window_rect_offsets.bottom,
         )
 
-    def _win32_event_filter(self, msg, _) -> bool:
-        """Filter the win32 events.
-
-        Args:
-            msg (int):
-                The message of the event.
-            _ (int):
-                The data of the event.
-
-        Returns:
-            bool: Whether the event was filtered or not.
-        """
-        # Suppress Left click
-        if (msg == 513 or msg == 514) and self._window_rect and (
-                self._window_rect.left < self._absolute_position[0] < self._window_rect.right and
-                self._window_rect.top < self._absolute_position[1] < self._window_rect.bottom
-        ):
-            self._is_clicked = True if msg == 513 else False
-            self.listener.suppress_event()
-        return True
+    # def _win32_event_filter(self, msg, _) -> bool:
+    #     """Filter the win32 events.
+    #
+    #     Args:
+    #         msg (int):
+    #             The message of the event.
+    #         _ (int):
+    #             The data of the event.
+    #
+    #     Returns:
+    #         bool: Whether the event was filtered or not.
+    #     """
+    #     # Suppress Left click
+    #     if (msg == 513 or msg == 514) and self._window_rect and (
+    #             self._window_rect.left < self._absolute_position[0] < self._window_rect.right and
+    #             self._window_rect.top < self._absolute_position[1] < self._window_rect.bottom
+    #     ):
+    #         self._is_clicked = True if msg == 513 else False
+    #         self.listener.suppress_event()
+    #     return True
 
     def _mouse_hook(self, event) -> None:
         """Handle the mouse events. Specifically, the wheel events."""
         if type(event) is mouse.WheelEvent:
             self._wheel_delta += event.delta
             self._wheel_position += event.delta
+
+    def shutdown(self) -> None:
+        """Shutdown the mouse handler."""
+        # self.listener.stop()
+        # Close the connection to the mouse listener
+        self.send_command("exit")
+        self._suppressor_connection.close()
+
+        self._suppressor_process.kill()
+        mouse.unhook_all()
+
+    def __del__(self) -> None:
+        self.shutdown()
 
 
 if __name__ == '__main__':

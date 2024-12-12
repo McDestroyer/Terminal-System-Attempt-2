@@ -7,6 +7,8 @@ mouse = MouseHandler()
 while True:
     # print(mouse.is_focused())
     mouse.update_inputs()
-    print(mouse.get_inputs())
-    print(mouse.listener.is_alive())
+
+    print(mouse._is_clicked)
+
+
     time.sleep(0.1)
