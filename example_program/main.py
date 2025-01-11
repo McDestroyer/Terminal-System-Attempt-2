@@ -1,4 +1,5 @@
 import copy
+import os
 import time
 
 from system.terminal_system import TerminalSystem
@@ -43,8 +44,7 @@ class Main:
         # Construct the test image object.
         test_image_object_image = Image(
             coordinates=Coordinate(),
-            image_frames="C:\\Users\\dafan\\OneDrive\\Desktop\\CS\\Side Project Games and Apps" +
-                         "\\Terminal System Attempt 2\\system\\assets\\images\\flashing_logo.AAI",
+            image_frames=os.path.join(os.path.dirname(os.path.dirname(__file__)), "system\\assets\\images\\flashing_logo.AAI"),
         )
 
         test_image_object = ImageObject(
