@@ -3,7 +3,7 @@ import time
 
 import mouse
 import pygetwindow
-from pynput import mouse as mouse_suppressor
+# from pynput import mouse as mouse_suppressor
 # import win32gui  # TODO: Find a way to make this work on python 3.13 and above or the the editor.
 # from pywinctl import Window, getWindowsWithTitle, getActiveWindow
 from pygetwindow import Window, getWindowsWithTitle, getActiveWindowTitle
@@ -86,9 +86,9 @@ class MouseHandler(GenericInput):
         self._update_window_rect()
 
         # Suppress the mouse.
-        self._suppress_mouse = False
-        self.listener = mouse_suppressor.Listener(win32_event_filter=self._win32_event_filter)
-        self.listener.start()
+        # self._suppress_mouse = False
+        # self.listener = mouse_suppressor.Listener(win32_event_filter=self._win32_event_filter)
+        # self.listener.start()
 
     @property
     def position(self) -> Point:
@@ -245,26 +245,26 @@ class MouseHandler(GenericInput):
             bottom=self._window.bottom + self._window_rect_offsets.bottom,
         )
 
-    def _win32_event_filter(self, msg, _) -> bool:
-        """Filter the win32 events.
-
-        Args:
-            msg (int):
-                The message of the event.
-            _ (int):
-                The data of the event.
-
-        Returns:
-            bool: Whether the event was filtered or not.
-        """
-        # Suppress Left click
-        if (msg == 513 or msg == 514) and self._window_rect and (
-                self._window_rect.left < self._absolute_position[0] < self._window_rect.right and
-                self._window_rect.top < self._absolute_position[1] < self._window_rect.bottom
-        ):
-            self._is_clicked = True if msg == 513 else False
-            self.listener.suppress_event()
-        return True
+    # def _win32_event_filter(self, msg, _) -> bool:
+    #     """Filter the win32 events.
+    #
+    #     Args:
+    #         msg (int):
+    #             The message of the event.
+    #         _ (int):
+    #             The data of the event.
+    #
+    #     Returns:
+    #         bool: Whether the event was filtered or not.
+    #     """
+    #     # Suppress Left click
+    #     if (msg == 513 or msg == 514) and self._window_rect and (
+    #             self._window_rect.left < self._absolute_position[0] < self._window_rect.right and
+    #             self._window_rect.top < self._absolute_position[1] < self._window_rect.bottom
+    #     ):
+    #         self._is_clicked = True if msg == 513 else False
+    #         self.listener.suppress_event()
+    #     return True
 
     def _mouse_hook(self, event) -> None:
         """Handle the mouse events. Specifically, the wheel events."""

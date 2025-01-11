@@ -1,3 +1,6 @@
+from queue import Queue
+from threading import Thread
+
 from system.inputs.input_handler import InputHandler
 
 from system.objects.helper_objects.coordinate_objects.axis import Axis
@@ -5,7 +8,7 @@ from system.objects.helper_objects.coordinate_objects.coordinate import Coordina
 from system.objects.helper_objects.ascii_image import Image
 from system.objects.helper_objects.pixel_objects.pixel_grid import PixelGrid
 
-from system.objects.system_objects.display import Display
+from system.objects.system_objects.display import Display, display_launcher
 from system.objects.system_objects.screen_object import Screen
 
 from system.objects.terminal_objects.cursor_object import CursorObject
@@ -22,6 +25,11 @@ class DisplayManager:
         self._display_grid = display_grid
 
         self._display: Display = Display(self._display_grid)
+        self._display_queue: Queue = Queue()
+
+        self._display_thread = Thread(target=display_launcher, args=(self._display, self._display_queue), daemon=True)
+        self._display_thread.start()
+
         self._screens: dict[str, Screen] = {}
         self._current_screen: Screen | None = None
 
@@ -63,7 +71,8 @@ class DisplayManager:
         if self._current_screen is not None:
             self._current_screen.draw()
 
-            self._display.update_display_grid(self._current_screen.screen_grid)
+            # self._display.update_display_grid(self._current_screen.screen_grid)
+            self._display_queue.put(self._current_screen.screen_grid)
 
     def update(self, input_handler: InputHandler) -> None:
         """Update the screen and all of its objects.

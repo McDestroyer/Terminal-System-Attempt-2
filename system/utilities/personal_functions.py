@@ -408,25 +408,33 @@ def boolput(*message: str, unlist_list: bool = True, sep: str = " ", letter_time
 # Math
 
 
-def rounder(num: float) -> int:
-    """Round a number better than the default function because default rounds down on .5 sometimes.
+def rounder(num: float, places: int = 0) -> float:
+    """Round a number better than the default function because default rounds down on .5 sometimes. The reason is
+    the default round() function uses a method called "round half to even" or "bankers' rounding" which is
+    designed to reduce bias when rounding large sets of numbers. This function is designed to round up on .5 instead
+    of down, which is more intuitive for most people.
 
     Args:
         num (float):
             The number you wish to round.
+        places (int, optional):
+            The number of decimal places to round to.
+            Defaults to 0.
 
     Returns:
-        int: The input rounded to the nearest whole number.
+        float: The input number rounded to the given number of decimal places.
     """
     # Truncates then checks if adding .5 is still lower that or equal to the original.
     # If true, outputs the truncated number + 1. Otherwise, passes on the truncated number.
     # Example 1: 1.4 in -> 1 + 0.5 </= 1.5 -> 1 out
     # Example 2: 1.6 in -> 1 + 0.5 <= 1.5 -> 1 + 1 out
     # Example 3: 1.5 in -> 1 + 0.5 <= 1.5 -> 1 + 1 out
-    if int(num) + 0.5 <= num:
-        return int(num) + 1
+    distance_factor = 10 ** places
 
-    return int(num)
+    if round(num, places) + (0.5 * distance_factor) <= num:
+        return round(num, places) + (1 * distance_factor)
+
+    return round(num, places)
 
 
 def rand(num1: int, num2: int = None) -> int:

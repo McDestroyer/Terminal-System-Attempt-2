@@ -1,6 +1,6 @@
 import copy
-import sys
 from copy import deepcopy
+from queue import Queue
 
 import system.utilities.cursor as cursor
 
@@ -8,6 +8,28 @@ import system.objects.helper_objects.pixel_objects.pixel_grid as pixel_grid
 import system.objects.helper_objects.coordinate_objects.coordinate as coord
 import system.objects.helper_objects.coordinate_objects.axis as ax
 from system.objects.helper_objects.coordinate_objects.point import Point
+
+
+def display_launcher(display_manager: 'Display', display_queue: Queue) -> None:
+    """Launch the display.
+
+    Args:
+        display_manager (DisplayManager):
+            The display manager to use.
+        display_queue (Queue):
+            The display queue to use.
+    """
+    display = display_manager
+    queue = display_queue
+
+    while True:
+        # If the display queue is empty, sleep for a bit and try again.
+        # if display_queue.empty():
+        #     queue.get()
+        #     time.sleep(.016)
+        #     continue
+
+        display.update_display_grid(queue.get(block=True, timeout=None))
 
 
 class Display:

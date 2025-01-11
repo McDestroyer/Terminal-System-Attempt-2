@@ -61,7 +61,7 @@ class Screen:
         self._handle_mouse(input_handler)
 
         for obj in self.terminal_objects:
-            if obj.update(input_handler):
+            if obj.visible and obj.update(input_handler):
                 self.should_draw = True
 
     def draw(self) -> PixelGrid:
@@ -73,7 +73,7 @@ class Screen:
                 self.screen_grid.overlay(obj.draw())
 
             if self.mouse is not None:
-                self.screen_grid.overlay(self.mouse.grid)
+                self.screen_grid.overlay(self.mouse.draw())
 
             self.should_draw = False
 
